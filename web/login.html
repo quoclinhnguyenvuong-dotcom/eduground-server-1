@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Đăng nhập — Eduground Cam</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  body{font-family:Segoe UI,Roboto,Arial;margin:0;background:#f5f8fb;display:flex;align-items:center;justify-content:center;height:100vh}
+  .box{width:360px;background:#fff;padding:24px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
+  h2{margin:0 0 12px;color:#0078d7}
+  input{width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid #d1e3f6}
+  button{background:#0078d7;color:#fff;border:none;padding:10px 14px;border-radius:8px;cursor:pointer;width:100%}
+  .row{display:flex;align-items:center;gap:8px}
+  a.small{font-size:13px;color:#0078d7;text-decoration:none}
+</style>
+</head>
+<body>
+  <div class="box">
+    <h2>Đăng nhập Eduground Cam</h2>
+    <input id="username" placeholder="Tên tài khoản">
+    <input id="password" type="password" placeholder="Mật khẩu">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:6px 0">
+      <label class="row"><input type="checkbox" id="remember"> Không hỏi lần sau</label>
+      <a class="small" href="#" onclick="alert('Quên mật khẩu? Liên hệ nhà trường.');return false;">Quên mật khẩu?</a>
+    </div>
+    <button onclick="doLogin()">Đăng nhập</button>
+    <div id="error" style="color:#b00020;margin-top:10px"></div>
+  </div>
+
+<script>
+  // nếu đã lưu remember -> auto login
+  const remembered = localStorage.getItem('edu_remember');
+  if(remembered){
+    sessionStorage.setItem('username', remembered);
+    window.location.href = 'index.html';
+  }
+
+  async function doLogin(){
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
+    const err = document.getElementById('error');
+    err.textContent = '';
+
+    if(!u || !p){ err.textContent='Vui lòng nhập đầy đủ tên & mật khẩu'; return; }
+
+    try{
+      const res = await fetch('./accounts.json', {cache:'no-store'});
+      if(!res.ok) throw new Error('Không tải được dữ liệu tài khoản');
+      const data = await res.json();
+      const found = (data.users || []).find(x => x.username === u && x.password === p);
+      if(!found){ err.textContent = 'Sai tên hoặc mật khẩu'; return; }
+      sessionStorage.setItem('username', u);
+      // lưu vai trò nếu cần
+      sessionStorage.setItem('role', found.role || 'student');
+
+      if(remember){
+        localStorage.setItem('edu_remember', u);
+      }
+      // redirect
+      window.location.href = 'index.html';
+    }catch(e){
+      err.textContent = 'Lỗi tải dữ liệu tài khoản: ' + e.message;
+    }
+  }
+</script>
+</body>
+</html>
