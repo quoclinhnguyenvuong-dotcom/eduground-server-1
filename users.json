@@ -1,9 +1,0 @@
-{
-  "users": [
-    {
-      "username": "devtool",
-      "password_hash": "scrypt:32768:8:1$pDYG3fGWsAjDRVFu$5639a34d3cdafb16bc11ab5cb500a927dcb8c0982237dfb25b83ee35714bacb88298ec831b077defbb8c9d6ee1bcb0e3832c220b2ace9387d597c655698633dd",
-      "role": "superadmin"
-    }
-  ]
-}

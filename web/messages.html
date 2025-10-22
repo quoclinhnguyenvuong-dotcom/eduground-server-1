@@ -1,97 +1,107 @@
-<!DOCTYPE html>
+<!-- File: web/messages.html -->
+<!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Tin nhắn — Eduground Cam</title>
-<link rel="icon" href="assets/logo.png">
-
-<!-- Redirect to login if not signed -->
-<script>
-  // Redirect ngay ở đầu nếu chưa đăng nhập
-  (function(){
-    const user = sessionStorage.getItem('username') || localStorage.getItem('edu_remember');
-    if(!user){
-      // nếu đang test nội bộ muốn bypass: set sessionStorage beforehand
-      window.location.href = 'login.html';
-    }
-  })();
-</script>
-
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;600&display=swap" rel="stylesheet">
-
-<!-- Gun.js CDN (chính xác) -->
-<script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
-
+<link rel="icon" href="assets/logo.png" />
 <style>
-  body{font-family:Roboto,Segoe UI,Arial;background:#f5f8fb;margin:0}
-  .nav{background:#0078d7;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
-  .nav a{color:#fff;margin:0 8px;text-decoration:none}
-  .layout{display:flex;height:calc(100vh - 56px)}
-  .sidebar{width:320px;background:#fff;border-right:1px solid #e6eef7;display:flex;flex-direction:column}
-  .sidebar .header{padding:10px;border-bottom:1px solid #eee;display:flex;gap:8px}
-  .sidebar input{flex:1;padding:8px;border-radius:6px;border:1px solid #cfdbe9}
-  .sidebar .list{overflow:auto;flex:1}
-  .chat-window{flex:1;display:flex;flex-direction:column;background:#eef6fb}
-  .chat-header{padding:12px;border-bottom:1px solid #e5eef8;background:#fff;display:flex;justify-content:space-between;align-items:center}
-  .chat-body{flex:1;padding:16px;overflow:auto}
-  .chat-footer{padding:12px;border-top:1px solid #e6eef7;background:#fff;display:flex;gap:8px;align-items:center}
-  .chat-footer input{flex:1;padding:10px;border-radius:20px;border:1px solid #cfdbe9}
-  .btn{background:#0078d7;color:#fff;padding:8px 12px;border:none;border-radius:8px;cursor:pointer}
-  .chat-item{padding:10px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #f3f7fb;cursor:pointer}
+  :root{
+    --blue:#0078d7; --bg:#f5f8fb; --muted:#667; --panel:#fff;
+  }
+  *{box-sizing:border-box}
+  body{font-family: Roboto, "Segoe UI", Arial, sans-serif; margin:0; background:var(--bg); color:#122;}
+  .nav{background:var(--blue); color:#fff; padding:10px 16px; display:flex; align-items:center; justify-content:space-between;}
+  .nav .left{display:flex;align-items:center;gap:18px}
+  .nav .left img{height:34px; cursor:pointer}
+  .nav a{color:#fff; text-decoration:none; margin-right:12px; font-weight:600}
+  .nav .user{background:rgba(255,255,255,0.08); padding:6px 10px; border-radius:18px; display:flex; gap:8px; align-items:center}
+  .nav .user img{width:32px;height:32px;border-radius:50%;object-fit:cover}
+  .layout{display:flex; height:calc(100vh - 56px); overflow:hidden}
+  .sidebar{width:320px; background:#fff; border-right:1px solid #e6eef7; display:flex; flex-direction:column}
+  .search{padding:12px; display:flex; gap:8px; border-bottom:1px solid #f0f4f9}
+  .search input{flex:1;padding:9px;border-radius:8px;border:1px solid #dbeaf7}
+  .search button{width:40px;border:none;background:var(--blue);color:#fff;border-radius:8px;cursor:pointer}
+  .chat-list{overflow:auto;flex:1;padding:8px}
+  .chat-item{display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;cursor:pointer}
   .chat-item:hover{background:#f6fbff}
-  .avatar{width:40px;height:40px;border-radius:50%;background:#ddd}
-  .group-meta{font-size:13px;color:#666}
-  .bubble{display:inline-block;padding:10px 14px;border-radius:14px;max-width:70%;word-wrap:break-word}
-  .bubble.me{background:#0078d7;color:#fff;margin-left:auto}
-  .bubble.other{background:#fff;border:1px solid #dceaf8}
+  .chat-item .avatar{width:44px;height:44px;border-radius:50%;background:#ddd;flex:0 0 44px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+  .chat-item .meta{flex:1}
+  .chat-item .meta .title{font-weight:700;color:var(--blue)}
+  .chat-item .meta .sub{font-size:13px;color:var(--muted)}
+  .main{flex:1;display:flex;flex-direction:column}
+  .main .header{padding:14px;border-bottom:1px solid #f0f4f9;background:#fff;display:flex;align-items:center;justify-content:space-between}
+  .main .body{flex:1; padding:12px; overflow:auto; background:#eef6fb; display:flex; flex-direction:column}
+  .placeholder{margin:auto;color:#9aa; font-size:16px}
+  .messages{max-width:920px;margin:8px auto; width:100%}
+  .msg-row{display:flex; margin:8px 0}
+  .msg-row.me{justify-content:flex-end}
+  .bubble{padding:10px 14px;border-radius:14px;max-width:70%; word-wrap:break-word; background:#fff; border:1px solid #e6eef7}
+  .bubble.me{background:var(--blue); color:#fff; border:0}
+  .meta-small{font-size:11px;color:#667;margin-top:6px}
+  .footer{padding:12px;border-top:1px solid #e6eef7;background:#fff;display:flex;gap:8px;align-items:center}
+  .footer input[type="text"]{flex:1;padding:10px;border-radius:20px;border:1px solid #dbeaf7}
+  .footer .btn{background:var(--blue);color:#fff;padding:8px 12px;border-radius:12px;border:none;cursor:pointer}
+  .small-muted{font-size:12px;color:#777}
   /* modal */
-  #modal{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center}
+  #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center}
   #modal .box{background:#fff;padding:18px;border-radius:10px;width:360px}
-  .small{font-size:12px;color:#666}
-  .media-preview{max-width:240px;display:block;margin-top:8px;border-radius:8px}
+  /* responsive */
+  @media(max-width:900px){
+    .sidebar{width:220px}
+    .bubble{max-width:86%}
+  }
 </style>
 </head>
 <body>
-
   <div class="nav">
-    <div style="display:flex;align-items:center;gap:12px">
-      <img src="assets/logo_index.png" style="height:34px;cursor:pointer" onclick="location.href='index.html'">
+    <div class="left">
+      <img src="assets/logo_index.png" alt="logo" onclick="location.href='index.html'">
       <a href="index.html">Trang chủ</a>
       <a href="messages.html">Tin nhắn</a>
+      <a href="reminder.html">Reminder</a>
+      <a href="soday.html">Sổ đầu bài</a>
       <a href="chatbot.html">Chatbot</a>
-      <a href="login.html">Đăng xuất</a>
+      <a href="meeting.html">Meeting</a>
+      <a href="login.html" id="logoutLink">Đăng xuất</a>
     </div>
-    <div id="welcome">Chào mừng, <b id="userLabel">Khách</b> 👋</div>
+    <div class="user" id="userBar">
+      <div id="welcomeText">Chào mừng, <b id="userLabel">Khách</b></div>
+      <img src="assets/avatar.png" alt="avatar" id="userAv">
+    </div>
   </div>
 
   <div class="layout">
     <div class="sidebar">
-      <div class="header">
-        <input id="search" placeholder="Tìm tài khoản / nội dung...">
-        <button class="btn" onclick="openCreate()">+</button>
+      <div class="search">
+        <input id="searchBox" placeholder="Tìm kiếm..." />
+        <button id="newBtn" title="Tạo nhóm">+</button>
       </div>
-      <div class="list" id="chatList"></div>
+      <div class="chat-list" id="chatList">
+        <!-- Danh sách nhóm / dm -->
+      </div>
     </div>
 
-    <div class="chat-window">
-      <div class="chat-header">
+    <div class="main">
+      <div class="header">
         <div id="chatTitle">Chưa chọn đoạn chat</div>
         <div>
-          <button class="btn" onclick="openManage()" id="manageBtn" style="display:none">Quản lý</button>
+          <button id="manageBtn" class="btn" style="display:none">Quản lý</button>
+          <button id="debugBtn" class="btn" style="display:none;background:#444;margin-left:8px">Dev</button>
         </div>
       </div>
 
-      <div class="chat-body" id="chatBody">
-        <p style="color:#666;text-align:center">Chọn đoạn chat để xem tin nhắn</p>
+      <div class="body" id="mainBody">
+        <div class="placeholder" id="placeholder">Chọn đoạn chat để xem tin nhắn</div>
+        <div class="messages" id="messagesArea" style="display:none"></div>
       </div>
 
-      <div class="chat-footer">
-        <input id="msgBox" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter') sendMsg()">
-        <input id="mediaInput" type="file" accept="image/*,video/*" style="display:none" onchange="onMediaSelected(event)">
-        <button class="btn" onclick="document.getElementById('mediaInput').click()">+ media</button>
-        <button class="btn" onclick="sendMsg()">Gửi</button>
+      <div class="footer">
+        <input id="msgInput" placeholder="Nhập tin nhắn..." type="text" onkeydown="if(event.key==='Enter') sendMessage()">
+        <input id="mediaInput" type="file" accept="image/*,video/*" style="display:none">
+        <button class="btn" id="mediaBtn">+ media</button>
+        <button class="btn" id="sendBtn">Gửi</button>
       </div>
     </div>
   </div>
@@ -99,325 +109,357 @@
   <!-- modal create group -->
   <div id="modal">
     <div class="box">
-      <h3>Tạo nhóm / Nhắn họ</h3>
-      <input id="gName" placeholder="Tên nhóm / tên riêng">
+      <h3>Tạo nhóm</h3>
+      <input id="gName" placeholder="Tên nhóm" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px">
       <div style="height:8px"></div>
-      <input id="gMembers" placeholder="Thành viên (phân tách bằng ,)">
+      <input id="gMembers" placeholder="Thành viên (phân tách bằng ,)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px">
       <div style="height:12px"></div>
-      <div class="small">Lưu ý: nếu tạo tin nhắn riêng, đặt tên giống username người nhận.</div>
-      <div style="height:8px"></div>
-      <button class="btn" onclick="createGroup()">Tạo</button>
-      <button style="margin-left:8px" onclick="closeCreate()">Huỷ</button>
-      <div id="modalPreview" style="margin-top:8px"></div>
+      <div style="text-align:right">
+        <button class="btn" id="createGroupBtn">Tạo</button>
+        <button style="margin-left:8px" id="cancelGroupBtn">Huỷ</button>
+      </div>
     </div>
   </div>
 
 <script>
-/* ======= CONFIG & INIT ======= */
+/* ====== CẤU HÌNH ====== */
+const API_BASE = ''; // nếu chạy cùng host (ví dụ: https://your-render-service/) -> leave empty to use relative paths
+const API_MESSAGES = API_BASE + '/messages';
+const API_GROUPS = API_BASE + '/groups';
+
+/* ====== NGƯỜI DÙNG & ROLE ====== */
 const USER = sessionStorage.getItem('username') || localStorage.getItem('edu_remember') || 'Khách';
+const ROLE = sessionStorage.getItem('role') || localStorage.getItem('role') || 'student';
 document.getElementById('userLabel').textContent = USER;
+document.getElementById('userAv').src = 'assets/avatar.png';
 
-// Gun peers: dùng list đa nguồn. Nếu peer down thì fallback local storage.
-// Thay đổi danh sách peers nếu bạn có peer ổn định riêng.
-const GUN_PEERS = [
-  'https://gun-manhinh.onrender.com/gun',  // ví dụ peer (có thể down)
-  'https://gun-eu.herokuapp.com/gun',      // ví dụ khác
-  // bạn có thể thêm peer riêng ở đây
-];
+/* logout */
+document.getElementById('logoutLink').addEventListener('click', (e)=>{
+  localStorage.removeItem('edu_remember');
+  sessionStorage.removeItem('username');
+  sessionStorage.removeItem('role');
+  // let the link do navigation
+});
 
-// tạo instance Gun. Nếu không muốn dùng peers công khai, để [] (chỉ local)
-const gun = Gun({ peers: GUN_PEERS });
+/* show manage / dev buttons by role */
+if(ROLE !== 'student') document.getElementById('manageBtn').style.display = 'inline-block';
+if(ROLE === 'admin') document.getElementById('debugBtn').style.display = 'inline-block';
 
-// data refs
-const groups = gun.get('edugroups');   // map of groups (keyed)
-const chats = gun.get('educhats');     // messages under keys
-
-/* ======= UI HELPERS ======= */
+/* ====== UI ELEMENTS ====== */
 const chatListEl = document.getElementById('chatList');
-const chatBody = document.getElementById('chatBody');
+const messagesArea = document.getElementById('messagesArea');
+const placeholder = document.getElementById('placeholder');
 const chatTitle = document.getElementById('chatTitle');
-const manageBtn = document.getElementById('manageBtn');
-let active = null;
-let shown = new Set();
+const msgInput = document.getElementById('msgInput');
+const sendBtn = document.getElementById('sendBtn');
+const mediaBtn = document.getElementById('mediaBtn');
+const mediaInput = document.getElementById('mediaInput');
+const modal = document.getElementById('modal');
 
-// escape
+let activeChatId = null;
+let activeChatMeta = null;
+let pollTimer = null;
+let shownKeys = new Set();
+let pendingMedia = null;
+
+/* ====== HELPERS ====== */
 function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatTime(ts){ try { return new Date(ts).toLocaleString(); } catch(e){ return ''; } }
 
-/* ======= LOAD & RENDER LIST ======= */
-function loadList(){
+/* ====== LOAD GROUPS (và local DMs) ====== */
+async function loadList(q=''){
   chatListEl.innerHTML = '';
-  // groups: iterate Gun map
-  groups.map().once((g, id) => {
-    if(!g) return;
-    const div = document.createElement('div');
-    div.className='chat-item';
-    div.onclick = ()=>openChat(id, g);
-    div.innerHTML = `<div class="avatar"></div>
-      <div>
-        <div style="font-weight:600;color:#0078d7">${escapeHtml(g.name)}</div>
-        <div class="group-meta">${(g.members||[]).slice(0,4).map(escapeHtml).join(', ')}</div>
-      </div>`;
-    chatListEl.appendChild(div);
-  });
+  // fetch groups from API
+  try{
+    const r = await fetch(API_GROUPS);
+    if(r.ok){
+      const data = await r.json();
+      // data expected to be object map of groups
+      Object.keys(data || {}).forEach(k=>{
+        const g = data[k];
+        if(!g || !g.name) return;
+        const name = g.name;
+        const members = (g.members||[]).join(', ');
+        if(q && !name.toLowerCase().includes(q) && !members.toLowerCase().includes(q)) return;
+        const div = renderChatItem(k, name, members, true);
+        chatListEl.appendChild(div);
+      });
+    }
+  }catch(err){
+    console.warn('Không lấy được groups:', err);
+  }
 
-  // show local DMs
+  // show local DMs stored in localStorage
   const dms = JSON.parse(localStorage.getItem('local_dms')||'[]');
   dms.forEach(dm=>{
     const id = 'dm:'+dm;
-    const div = document.createElement('div');
-    div.className='chat-item';
-    div.onclick = ()=>openChat(id,{name:dm,members:[dm,USER]});
-    div.innerHTML = `<div class="avatar"></div><div><div style="font-weight:600">${escapeHtml(dm)}</div><div class="group-meta">Tin nhắn riêng</div></div>`;
+    if(q && !dm.toLowerCase().includes(q)) return;
+    const div = renderChatItem(id, dm, 'Tin nhắn riêng', false);
     chatListEl.appendChild(div);
   });
-}
 
-/* ======= OPEN CHAT ======= */
-function openChat(id, data){
-  active = id;
-  chatTitle.textContent = data.name || id;
-  manageBtn.style.display = (id.startsWith('dm:')? 'none':'inline-block');
-  chatBody.innerHTML = '';
-  shown.clear();
-
-  if(id.startsWith('dm:')){
-    const peer = id.split(':')[1];
-    // store as local DM
-    let dms = JSON.parse(localStorage.getItem('local_dms')||'[]');
-    if(!dms.includes(peer)){ dms.push(peer); localStorage.setItem('local_dms', JSON.stringify(dms)); loadList();}
-    const key = 'dm_'+[peer,USER].sort().join('_');
-    const msgs = JSON.parse(localStorage.getItem(key)||'[]');
-    msgs.forEach(mk => addMsgToUI(mk));
-  } else {
-    // subscribe Gun messages for this room
-    chats.get(id).map().once((m,k)=>{
-      if(!m) return;
-      addMsgToUI(m);
-    });
+  // if empty show hint
+  if(!chatListEl.firstChild){
+    chatListEl.innerHTML = '<div style="padding:12px;color:#999">Không có đoạn chat. Tạo nhóm hoặc nhắn trực tiếp.</div>';
   }
 }
 
-/* ======= ADD MESSAGE UI ======= */
-function addMsgToUI(m){
-  // simple duplicate prevention using time+from+text
-  const key = (m._ && m._['#']) || (m.from+'|'+m.time+'|'+m.text);
-  if(shown.has(key)) return;
-  shown.add(key);
-
+function renderChatItem(id, title, sub, isGroup){
   const div = document.createElement('div');
-  div.style.marginBottom='10px';
-  const isMe = m.from === USER;
+  div.className = 'chat-item';
+  div.onclick = ()=> openChat(id, {name:title, members: sub, isGroup});
+  div.innerHTML = `
+    <div class="avatar">${escapeHtml((title||'')[0]||'U')}</div>
+    <div class="meta">
+      <div class="title">${escapeHtml(title)}</div>
+      <div class="sub">${escapeHtml(sub)}</div>
+    </div>
+  `;
+  return div;
+}
+
+/* ====== OPEN CHAT ====== */
+function openChat(id, meta){
+  stopPolling();
+  activeChatId = id;
+  activeChatMeta = meta || {};
+  chatTitle.textContent = meta.name || id;
+  placeholder.style.display = 'none';
+  messagesArea.style.display = 'block';
+  messagesArea.innerHTML = '';
+  shownKeys.clear();
+  // if DM -> ensure saved in local_dms
+  if(id.startsWith('dm:')){
+    const peer = id.split(':')[1];
+    let dms = JSON.parse(localStorage.getItem('local_dms')||'[]');
+    if(!dms.includes(peer)){ dms.push(peer); localStorage.setItem('local_dms', JSON.stringify(dms)); loadList(); }
+    // load local messages
+    const key = 'dm_'+[peer,USER].sort().join('_');
+    const msgs = JSON.parse(localStorage.getItem(key)||'[]');
+    msgs.forEach(m=> addMsgToUI(m));
+    startPolling(); // still poll server DM room too
+  } else {
+    // fetch group messages then start polling
+    startPolling();
+  }
+}
+
+/* ====== POLLING ====== */
+async function pollOnce(){
+  if(!activeChatId) return;
+  try{
+    const r = await fetch(API_MESSAGES);
+    if(!r.ok) return;
+    const data = await r.json(); // expected map by chat_id
+    const all = data || {};
+    // For DM: we used local key + also server rooms named like dmroom_peer_user maybe — but server stores by chat_id, front uses chat ids we choose.
+    if(activeChatId.startsWith('dm:')){
+      // we will also try to read server key 'dmroom_peer_user'
+      const peer = activeChatId.split(':')[1];
+      const room = 'dmroom_' + [peer,USER].sort().join('_');
+      const msgs = all[room] || [];
+      msgs.forEach(m=> addMsgToUI(m));
+    } else {
+      const msgs = all[activeChatId] || [];
+      msgs.forEach(m=> addMsgToUI(m));
+    }
+  }catch(err){
+    console.warn('poll error', err);
+  }
+}
+
+function startPolling(){
+  pollOnce();
+  pollTimer = setInterval(pollOnce, 2000);
+}
+function stopPolling(){ if(pollTimer){ clearInterval(pollTimer); pollTimer = null; } }
+
+/* ====== ADD MESSAGE TO UI ====== */
+function addMsgToUI(m){
+  // compute unique key
+  const key = m._id || (m.from+'|'+m.time+'|'+(m.text||m.data||''));
+  if(shownKeys.has(key)) return;
+  shownKeys.add(key);
+
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + ((m.from === USER)? 'me':'');
   const bubble = document.createElement('div');
-  bubble.className = 'bubble ' + (isMe? 'me':'other');
+  bubble.className = 'bubble ' + ((m.from === USER)? 'me':'');
 
   if(m.type === 'media'){
-    // if image
-    if(m.mediaType && m.mediaType.startsWith('image')){
-      const img = document.createElement('img');
-      img.src = m.data;
-      img.className = 'media-preview';
-      bubble.appendChild(img);
+    // if we get a data url - show image; otherwise show link
+    if(m.data && m.mediaType && m.mediaType.startsWith('image') && m.data.startsWith('data:')){
+      bubble.innerHTML = `<img src="${m.data}" style="max-width:320px;border-radius:8px;display:block">`;
+    } else if(m.data && typeof m.data === 'string'){
+      bubble.innerHTML = `<div>[Media] <a href="${m.data}" target="_blank">Mở file</a></div>`;
     } else {
-      // video or file: show link preview
-      const a = document.createElement('a');
-      a.href = m.data;
-      a.target = '_blank';
-      a.textContent = '[Media] Mở file';
-      bubble.appendChild(a);
+      bubble.innerHTML = `<div>[Media] Coming soon</div>`;
     }
   } else {
-    bubble.innerHTML = '<div>' + escapeHtml(m.text) + '</div>';
+    bubble.innerHTML = `<div>${escapeHtml(m.text||'')}</div>`;
   }
 
   const meta = document.createElement('div');
-  meta.style.fontSize='11px';
-  meta.style.color='#666';
-  meta.style.marginTop='6px';
-  meta.textContent = new Date(m.time||Date.now()).toLocaleString() + ' — ' + (m.from||'');
+  meta.className = 'meta-small';
+  meta.textContent = `${formatTime(m.time||Date.now())} — ${m.from||'?'}`;
   bubble.appendChild(meta);
 
-  if(isMe) {
-    div.style.textAlign='right';
-    div.appendChild(bubble);
-  } else {
-    div.style.textAlign='left';
-    div.appendChild(bubble);
-  }
-  chatBody.appendChild(div);
-  chatBody.scrollTop = chatBody.scrollHeight;
+  row.appendChild(bubble);
+  messagesArea.appendChild(row);
+  messagesArea.scrollTop = messagesArea.scrollHeight;
 }
 
-/* ======= SEND MESSAGE ======= */
-function sendMsg(){
-  const box = document.getElementById('msgBox');
-  const text = box.value.trim();
+/* ====== SENDING MESSAGE ====== */
+async function sendMessage(){
+  const text = msgInput.value.trim();
   if(!text && !pendingMedia) return;
-  if(!active){ alert('Chưa chọn đoạn chat'); return; }
+  if(!activeChatId){ alert('Chưa chọn đoạn chat'); return; }
 
-  const payload = { text, from: USER, time: Date.now(), type: 'text' };
-
+  // build payload
+  const payload = {
+    chat_id: activeChatId,
+    from: USER,
+    time: Date.now(),
+    type: pendingMedia? 'media' : 'text'
+  };
   if(pendingMedia){
-    // media was prepared via onMediaSelected -> pendingMedia = {data, mediaType}
-    payload.type = 'media';
-    payload.data = pendingMedia.data;
+    // currently we send DataURL as data (note: not ideal for big files) — or send placeholder link
+    payload.data = pendingMedia.data; // base64 dataURL
     payload.mediaType = pendingMedia.mediaType;
-    pendingMedia = null;
-    document.getElementById('modalPreview').innerHTML = '';
+  } else {
+    payload.text = text;
   }
 
-  if(active.startsWith('dm:')){
-    const peer = active.split(':')[1];
+  // optimistic UI: show a temporary "pending" entry
+  const temp = {...payload, _id: 'tmp_'+Math.random().toString(36).slice(2), pending:true};
+  addMsgToUI(temp);
+  msgInput.value = '';
+  pendingMedia = null;
+  document.getElementById('mediaBtn').textContent = '+ media';
+
+  // POST to server
+  try{
+    const r = await fetch(API_MESSAGES, {
+      method:'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if(!r.ok){
+      // mark failure
+      alert('Gửi không thành công (server). Tin được lưu cục bộ.');
+      // fallback: store locally
+      fallbackLocalSave(payload);
+    } else {
+      // good: server saved. optionally update UI by re-polling or just leave optimistic entry.
+      // doing one immediate poll to get canonical data from server
+      setTimeout(()=>pollOnce(), 400);
+    }
+  }catch(err){
+    console.warn('send error', err);
+    alert('Lỗi kết nối — đã lưu cục bộ.');
+    fallbackLocalSave(payload);
+  }
+}
+
+/* fallback: lưu local DM or local_chat_... */
+function fallbackLocalSave(payload){
+  if(activeChatId.startsWith('dm:')){
+    const peer = activeChatId.split(':')[1];
     const key = 'dm_'+[peer,USER].sort().join('_');
     const arr = JSON.parse(localStorage.getItem(key)||'[]');
     arr.push(payload);
     localStorage.setItem(key, JSON.stringify(arr));
-    addMsgToUI(payload);
-
-    // also push to Gun room for dm (if peers available)
-    const room = 'dmroom_' + [peer,USER].sort().join('_');
-    chats.get(room).set(payload, ack=>{
-      // ack may be undefined if no peers; ignore
-    });
   } else {
-    // group: store to Gun under chat key
-    chats.get(active).set(payload, function(ack){
-      if(ack && ack.err){
-        // fallback: store locally under key
-        const localKey = 'local_chat_'+active;
-        const arr = JSON.parse(localStorage.getItem(localKey)||'[]'); arr.push(payload);
-        localStorage.setItem(localKey, JSON.stringify(arr));
-        addMsgToUI(payload);
-        console.warn('Gun set failed, stored local copy', ack.err);
-      } else {
-        addMsgToUI(payload);
-      }
-    });
+    const localKey = 'local_chat_'+activeChatId;
+    const arr = JSON.parse(localStorage.getItem(localKey)||'[]');
+    arr.push(payload);
+    localStorage.setItem(localKey, JSON.stringify(arr));
   }
-
-  box.value = '';
 }
 
-/* ======= MEDIA UPLOAD ======= */
-let pendingMedia = null;
-function onMediaSelected(e){
+/* ====== MEDIA INPUT ====== */
+mediaBtn.addEventListener('click', ()=> mediaInput.click());
+mediaInput.addEventListener('change', e=>{
   const f = e.target.files[0];
   if(!f) return;
-  // small safety: if file > 3MB warn (you can tune)
-  if(f.size > 3*1024*1024){
-    if(!confirm('File lớn hơn 3MB — lưu/đồng bộ có thể rất chậm. Tiếp tục?')){ e.target.value=''; return; }
-  }
+  if(f.size > 3*1024*1024 && !confirm('File lớn hơn 3MB — gửi có thể chậm. Tiếp tục?')){ e.target.value=''; return;}
   const reader = new FileReader();
   reader.onload = function(ev){
-    const dataUrl = ev.target.result;
-    pendingMedia = { data: dataUrl, mediaType: f.type };
-    document.getElementById('modalPreview').innerHTML = `<div class="small">Preview (chưa gửi):</div>
-      ${f.type.startsWith('image')? `<img src="${dataUrl}" class="media-preview">` : `<div class="small">File sẵn sàng — nhấn Gửi để gửi</div>`}`;
+    pendingMedia = { data: ev.target.result, mediaType: f.type };
+    mediaBtn.textContent = '📎 (1)';
   };
   reader.readAsDataURL(f);
-}
-
-/* ======= CREATE GROUP ======= */
-function openCreate(){ document.getElementById('modal').style.display = 'flex'; }
-function closeCreate(){ document.getElementById('modal').style.display = 'none'; document.getElementById('gName').value=''; document.getElementById('gMembers').value=''; document.getElementById('modalPreview').innerHTML=''; pendingMedia=null; }
-function createGroup(){
-  const name = (document.getElementById('gName').value || '').trim();
-  const membersText = (document.getElementById('gMembers').value || '').trim();
-  const members = membersText ? membersText.split(',').map(s=>s.trim()).filter(Boolean) : [];
-  if(!name) return alert('Nhập tên nhóm hoặc tên người nhận');
-  // create unique id
-  const id = 'grp_' + name.replace(/\s+/g,'_') + '_' + Math.random().toString(36).slice(2,8);
-
-  const obj = { name, members, createdBy: USER, roles: { owner: USER, admins: [] }, muted: {} };
-
-  // use groups.set(obj, ack => {...})
-  groups.set(obj, function(ack){
-    if(ack && ack.err){
-      alert('Không tạo được nhóm (peer offline). Đang lưu cục bộ.');
-      // fallback: save in localStorage
-      let local = JSON.parse(localStorage.getItem('local_groups')||'[]');
-      local.push({ id, ...obj });
-      localStorage.setItem('local_groups', JSON.stringify(local));
-      closeCreate();
-      loadList();
-      return;
-    }
-    // success — Gun will propagate key and map().once callback will render
-    closeCreate();
-    setTimeout(loadList, 500); // small delay để Gun cập nhật UI
-  });
-}
-
-/* ======= GROUP MANAGEMENT ======= */
-function openManage(){
-  if(!active || active.startsWith('dm:')) return;
-  groups.map().once((g,k) => {
-    // find matching by key
-    if(k === active){
-      const owner = (g && g.roles && g.roles.owner) || null;
-      const admins = (g && g.roles && g.roles.admins) || [];
-      const isOwner = owner === USER;
-      const isAdmin = isOwner || admins.includes(USER);
-      // prompt actions
-      const action = prompt('Lệnh (mute:user / unmute:user / kick:user / addadmin:user / removeadmin:user / members):');
-      if(!action) return;
-      const [cmd, target] = action.split(':').map(x=>x && x.trim());
-      if(cmd === 'members'){ alert('Thành viên: '+(g.members||[]).join(', ')); return; }
-      if((cmd==='mute' || cmd==='unmute') && isAdmin){
-        const path = groups.get(active).get('muted');
-        const obj = {};
-        obj[target] = (cmd==='mute');
-        path.put(obj);
-        alert('Đã '+(cmd==='mute'?'mute ':'unmute ') + target);
-        return;
-      }
-      if(cmd === 'kick' && isOwner){
-        const newMembers = (g.members||[]).filter(x=>x !== target);
-        groups.get(active).put({ ...g, members: newMembers });
-        alert('Đã kick ' + target);
-        return;
-      }
-      if(cmd === 'addadmin' && isOwner){
-        const adminsNew = (g.roles && g.roles.admins ? g.roles.admins.slice() : []);
-        if(!adminsNew.includes(target)) adminsNew.push(target);
-        groups.get(active).get('roles').put({ admins: adminsNew });
-        alert('Đã thêm admin ' + target);
-        return;
-      }
-      alert('Không đủ quyền hoặc lệnh không hợp lệ.');
-    }
-  });
-}
-
-/* ======= SEARCH (basic) ======= */
-document.getElementById('search').addEventListener('input', function(){
-  const q = this.value.trim().toLowerCase();
-  chatListEl.innerHTML = '';
-  groups.map().once((g,k)=>{
-    if(!g) return;
-    if(!q || g.name.toLowerCase().includes(q) || (g.members||[]).join(' ').toLowerCase().includes(q)){
-      const div = document.createElement('div');
-      div.className='chat-item';
-      div.onclick = ()=>openChat(k,g);
-      div.innerHTML = `<div class="avatar"></div><div><div style="font-weight:600;color:#0078d7">${escapeHtml(g.name)}</div><div class="group-meta">${(g.members||[]).slice(0,4).join(', ')}</div></div>`;
-      chatListEl.appendChild(div);
-    }
-  });
-  // local dms
-  const dms = JSON.parse(localStorage.getItem('local_dms')||'[]');
-  dms.forEach(dm=>{
-    if(!q || dm.toLowerCase().includes(q)){
-      const id = 'dm:'+dm;
-      const div = document.createElement('div');
-      div.className='chat-item';
-      div.onclick = ()=>openChat(id, {name:dm, members:[dm,USER]});
-      div.innerHTML = `<div class="avatar"></div><div><div style="font-weight:600">${escapeHtml(dm)}</div><div class="group-meta">Tin nhắn riêng</div></div>`;
-      chatListEl.appendChild(div);
-    }
-  });
 });
 
-/* ======= INITIAL LOAD ======= */
-loadList();
+/* ====== CREATE GROUP (modal) ====== */
+document.getElementById('newBtn').addEventListener('click', ()=> { modal.style.display = 'flex'; });
+document.getElementById('cancelGroupBtn').addEventListener('click', ()=> { modal.style.display='none'; });
+document.getElementById('createGroupBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('gName').value.trim();
+  const members = (document.getElementById('gMembers').value || '').split(',').map(s=>s.trim()).filter(Boolean);
+  if(!name) { alert('Nhập tên nhóm'); return; }
+  const id = 'grp_' + name.replace(/\s+/g,'_') + '_' + Math.random().toString(36,8);
+  const obj = { id, name, members, createdBy: USER, roles:{owner:USER, admins:[]}, muted:{} };
+  // POST to API
+  try{
+    const r = await fetch(API_GROUPS, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(obj) });
+    if(!r.ok){ alert('Tạo nhóm thất bại (server). Lưu local.'); // fallback local
+      let local = JSON.parse(localStorage.getItem('local_groups')||'[]'); local.push(obj); localStorage.setItem('local_groups', JSON.stringify(local));
+    } else {
+      // success -> reload list
+      setTimeout(()=> loadList(), 600);
+    }
+  }catch(err){
+    console.warn('create group error', err);
+    let local = JSON.parse(localStorage.getItem('local_groups')||'[]'); local.push(obj); localStorage.setItem('local_groups', JSON.stringify(local));
+  }
+  modal.style.display='none';
+});
+
+/* ====== SEARCH ====== */
+document.getElementById('searchBox').addEventListener('input', function(){
+  loadList(this.value.trim().toLowerCase());
+});
+
+/* ====== GROUP MANAGEMENT (simple) ====== */
+document.getElementById('manageBtn').addEventListener('click', ()=>{
+  if(!activeChatId || activeChatId.startsWith('dm:')) return alert('Chọn nhóm để quản lý.');
+  const cmd = prompt('Lệnh (members / kick:username / addadmin:username / removeadmin:username):');
+  if(!cmd) return;
+  // Very lightweight: we will PUT updated object by reading groups (can't PUT since API store uses map keys)
+  // For now we will just show instructions to admin (requires backend improvements)
+  alert('Yêu cầu đã gửi (hiện tại backend cần endpoint bổ sung để xử lý quyền).');
+});
+
+/* debug button for admin */
+document.getElementById('debugBtn').addEventListener('click', ()=> {
+  const dump = {
+    user:USER, role:ROLE, active: activeChatId,
+    local_dms: JSON.parse(localStorage.getItem('local_dms')||'[]'),
+    local_groups: JSON.parse(localStorage.getItem('local_groups')||'[]')
+  };
+  alert(JSON.stringify(dump, null, 2));
+});
+
+/* ====== INITIALIZE ====== */
+(async function init(){
+  if(!sessionStorage.getItem('username') && !localStorage.getItem('edu_remember')){
+    // redirect to login
+    window.location.href = 'login.html';
+    return;
+  }
+  await loadList();
+  // optional: auto open first group
+  // try to auto-open first group from server
+  try{
+    const r = await fetch(API_GROUPS);
+    if(r.ok){
+      const data = await r.json();
+      const keys = Object.keys(data || {});
+      if(keys.length) openChat(keys[0], data[keys[0]]);
+    }
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
