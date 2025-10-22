@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatbot Eduground</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- MathJax -->
+<script>
+window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+<style>
+  body{font-family:"Noto Sans";background:#f0f6fb;margin:0}
+  .nav{background:#0078d7;color:#fff;padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+  .nav a{color:#fff;margin:0 8px;text-decoration:none}
+  .container{max-width:900px;margin:28px auto;padding:18px;background:#fff;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
+  #chatbox{height:460px;border:1px solid #e6eef7;border-radius:8px;padding:12px;overflow:auto;background:#fcfeff}
+  .msg{padding:10px 12px;border-radius:10px;max-width:78%;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+  .bot{background:#eef6fb;color:#0b2540}
+  .user{background:#0078d7;color:#fff;margin-left:auto;text-align:right}
+  .row{display:flex;gap:8px;margin-top:12px}
+  input[type=text]{flex:1;padding:10px;border-radius:8px;border:1px solid #cfdbe9}
+  button{background:#0078d7;color:#fff;padding:10px 12px;border:none;border-radius:8px;cursor:pointer}
+  button:hover{background:#005bb5}
+</style>
+</head>
+
+<body>
+  <div class="nav">
+    <div><img src="assets/logo_index.png" style="height:36px;cursor:pointer" onclick="location.href='index.html'"></div>
+    <div>
+      <a href="index.html">Trang chủ</a>
+      <a href="messages.html">Tin nhắn</a>
+      <a href="reminder.html">Reminder</a>
+      <a href="sodaubai.html">Sổ đầu bài</a>
+      <a href="chatbot.html">Chatbot</a>
+      <a href="Meeting.html"><b>Meeting</b>
+      <a href="login.html">Đăng Xuất</a>
+      <a href="#" onclick="logout()">Đăng xuất</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1 id="welcome">🤖 Chatbot Eduground</h1>
+    <div id="chatbox">
+      <div class="msg bot" id="intro"></div>
+    </div>
+
+    <div class="row">
+      <input id="userInput" placeholder="Nhập câu hỏi của bạn...">
+      <button id="sendBtn">Gửi</button>
+    </div>
+  </div>
+
+<script>
+const USER = sessionStorage.getItem('username') || 'Khách';
+document.getElementById('welcome').innerHTML = `🤖 Chatbot Eduground`;
+document.getElementById('intro').innerHTML = `Xin chào, <b>${USER}</b> 👋<br>Mình là trợ lý học tập Eduground, có thể giúp bạn hiểu bài, viết công thức toán hoặc giải thích khái niệm.`;
+
+document.getElementById('sendBtn').addEventListener('click', sendMessage);
+document.getElementById('userInput').addEventListener('keydown', e => { if(e.key==='Enter') sendMessage(); });
+
+// === CONFIG ===
+const API_URL="https://openrouter.ai/api/v1/chat/completions";
+const API_KEY="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";
+const MODEL="tngtech/deepseek-r1t2-chimera:free";async function sendMessage(){
+  const input=document.getElementById('userInput');
+  const text=input.value.trim();
+  if(!text)return;
+  const cb=document.getElementById('chatbox');
+
+  const u=document.createElement('div');u.className='msg user';u.textContent=text;cb.appendChild(u);
+  const wait=document.createElement('div');wait.className='msg bot';wait.id='waiting';wait.textContent='⏳ Đang chờ phản hồi...';cb.appendChild(wait);
+  cb.scrollTop=cb.scrollHeight;input.value='';
+
+  try{
+    const r=await fetch(API_URL,{method:'POST',headers:{"Authorization":`Bearer ${API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Bạn là trợ lý học tập tiếng Việt, giúp học sinh hiểu bài, hiển thị công thức bằng LaTeX."},{role:"user",content:text}]})});
+    document.getElementById('waiting')?.remove();
+    if(!r.ok){cb.innerHTML+=`<div class="msg bot">❌ Lỗi phản hồi ${r.status}</div>`;return;}
+    const d=await r.json();let reply=d?.choices?.[0]?.message?.content||"Không có phản hồi.";
+    reply=reply.replace(/```(.*?)```/gs,'<pre>$1</pre>').replace(/\n/g,'<br>');
+    const b=document.createElement('div');b.className='msg bot';b.innerHTML=reply;cb.appendChild(b);
+    if(window.MathJax)MathJax.typesetPromise();
+  }catch(e){
+    document.getElementById('waiting')?.remove();
+    cb.innerHTML+=`<div class="msg bot">⚠️ Lỗi kết nối: ${e.message}</div>`;
+  }
+  cb.scrollTop=cb.scrollHeight;
+}
+
+function logout(){
+  sessionStorage.clear();localStorage.clear();
+  location.href='login.html';
+}
+</script>
+</body>
+</html>
