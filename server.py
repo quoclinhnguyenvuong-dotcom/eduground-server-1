@@ -268,7 +268,10 @@ def admin_clear():
     accounts = load_json(ACCOUNTS_FILE, {}).get("users", [])
     devtool_pw = next((u["password"] for u in accounts if u["username"] == "devtool"), None)
     if key != devtool_pw:
-        return jsonify({"ok": False, "error": "forbidden"}), 403save_json(DATA_FILE, {})
+        if user_role != "admin":
+    return jsonify({"ok": False, "error": "forbidden"}), 403
+
+save_json(DATA_FILE, {})
     try:
         shutil.rmtree(UPLOADS_DIR)
         os.makedirs(UPLOADS_DIR, exist_ok=True)
