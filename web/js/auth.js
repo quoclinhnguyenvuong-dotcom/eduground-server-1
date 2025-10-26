@@ -1,87 +1,83 @@
-// web/js/auth.js
+// -------------------------------
+// AUTH.JS - Eduground Auth System
+// -------------------------------
 
-const API_BASE = window.location.origin.includes("onrender.com")
-  ? window.location.origin
-  : "https://eduground-server-1.onrender.com";
-
-// Hiện thông báo (message UI)
-function showMessage(msg, type = "info") {
-  const el = document.querySelector("#messageBox");
-  if (!el) return console.log(`[${type}]`, msg);
-  el.textContent = msg;
-  el.className = `msg ${type}`;
-  setTimeout(() => {
-    el.textContent = "";
-    el.className = "msg";
-  }, 3000);
+// Hiển thị thông báo ra màn hình
+function showMessage(message, type = "info") {
+  const msg = document.createElement("div");
+  msg.className = `alert ${type}`;
+  msg.textContent = message;
+  document.body.appendChild(msg);
+  setTimeout(() => msg.remove(), 3000);
 }
 
-// Đăng nhập
-async function doLogin() {
-  const username = document.querySelector("#username").value.trim();
-  const password = document.querySelector("#password").value.trim();
+// Xác thực đăng nhập
+function doLogin() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const remember = document.getElementById("remember").checked;
 
   if (!username || !password) {
-    showMessage("⚠️ Vui lòng nhập đầy đủ thông tin!", "error");
+    showMessage("Vui lòng nhập đủ thông tin đăng nhập!", "error");
     return;
   }
 
-  try {
-    const resp = await fetch(`${API_BASE}/api/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+  fetch("accounts.json")
+    .then(res => res.json())
+    .then(data => {
+      const user = data.users.find(
+        u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
+      );
+
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+
+        if (remember) {
+          localStorage.setItem("rememberUser", JSON.stringify(user));
+        } else {
+          localStorage.removeItem("rememberUser");
+        }
+
+        showMessage(`Xin chào ${user.username}!`, "success");
+        window.location.href = "index.html";
+      } else {
+        showMessage("Sai tài khoản hoặc mật khẩu!", "error");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      showMessage("Không thể kết nối đến server!", "error");
     });
-
-    if (!resp.ok) {
-      showMessage("❌ Sai tài khoản hoặc mật khẩu!", "error");
-      return;
-    }
-
-    const data = await resp.json();
-    if (data.ok) {
-      localStorage.setItem("user", JSON.stringify(data));
-      showMessage("✅ Đăng nhập thành công!", "success");
-      setTimeout(() => (window.location.href = "index.html"), 800);
-    } else {
-      showMessage(data.error || "Đăng nhập thất bại!", "error");
-    }
-  } catch (e) {
-    console.error(e);
-    showMessage("🚫 Không thể kết nối tới server.", "error");
-  }
 }
 
-// Kiểm tra trạng thái đăng nhập
+// Kiểm tra quyền truy cập (tự động redirect nếu chưa đăng nhập)
 function ensureAuth() {
   const user = JSON.parse(localStorage.getItem("user") || "null");
+
   if (!user) {
+    console.warn("⚠️ Không có user đăng nhập, quay lại login...");
     window.location.href = "login.html";
     return;
   }
 
-  fetch(`${API_BASE}/api/check-auth`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: user.username }),
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.ok) {
-        localStorage.removeItem("user");
-        window.location.href = "login.html";
-      } else {
-        console.log(`✅ Auth ok: ${user.username} (${user.role})`);
-        document.querySelector("#currentUser")?.textContent = user.username;
-      }
-    })
-    .catch(() => {
-      showMessage("Không thể xác thực người dùng!", "error");
-      window.location.href = "login.html";
-    });
+  console.log(`✅ Authenticated: ${user.username} (${user.role})`);
+
+  // Cập nhật giao diện người dùng hiện tại
+  const userDisplay = document.querySelector("#currentUser");
+  if (userDisplay) {
+    userDisplay.textContent = user.username;
+  }
+
+  // Nếu là reminder page → chỉ giáo viên mới được sửa
+  const isReminder = window.location.pathname.includes("reminders.html");
+  if (isReminder && user.role !== "teacher" && user.role !== "admin") {
+    const editButtons = document.querySelectorAll(".edit-btn");
+    editButtons.forEach(btn => (btn.disabled = true));
+    showMessage("Bạn không có quyền chỉnh sửa nhắc nhở!", "warning");
+  }
 }
 
-// Lấy role
+// Lấy role hiện tại
 function getUserRole() {
   const user = JSON.parse(localStorage.getItem("user") || "null");
   return user ? user.role : null;
@@ -90,5 +86,19 @@ function getUserRole() {
 // Đăng xuất
 function logout() {
   localStorage.removeItem("user");
+  localStorage.removeItem("rememberUser");
+  showMessage("Đã đăng xuất!", "info");
   window.location.href = "login.html";
 }
+
+// Tự động xác thực khi load trangdocument.addEventListener("DOMContentLoaded", () => {
+  const isLoginPage = window.location.pathname.includes("login.html");
+  const savedUser = JSON.parse(localStorage.getItem("rememberUser") || "null");
+
+  if (isLoginPage && savedUser) {
+    localStorage.setItem("user", JSON.stringify(savedUser));
+    window.location.href = "index.html";
+  } else if (!isLoginPage) {
+    ensureAuth();
+  }
+});
