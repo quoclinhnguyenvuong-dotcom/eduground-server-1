@@ -1,104 +1,78 @@
-// -------------------------------
-// AUTH.JS - Eduground Auth System
-// -------------------------------
+// js/auth.js
+const API_BASE = ""; // relative to same origin
 
-// Hiển thị thông báo ra màn hình
-function showMessage(message, type = "info") {
-  const msg = document.createElement("div");
-  msg.className = `alert ${type}`;
-  msg.textContent = message;
-  document.body.appendChild(msg);
-  setTimeout(() => msg.remove(), 3000);
+function showMessage(msg, type = "info") {
+  const el = document.getElementById("msg");
+  if (el) {
+    el.textContent = msg;
+    el.style.color = type === "error" ? "red" : "green";
+  }
 }
 
-// Xác thực đăng nhập
+// Kiểm tra session khi load trang
+window.addEventListener("DOMContentLoaded", () => {
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+
+  // Nếu đã đăng nhập, redirect sang index
+  if (user && window.location.pathname.includes("login.html")) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  // Nếu chưa đăng nhập mà vào trang khác, redirect về login
+  if (!user && !window.location.pathname.includes("login.html")) {
+    window.location.href = "login.html";
+  }
+});
+
+// Đăng nhập
 function doLogin() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   const remember = document.getElementById("remember").checked;
 
   if (!username || !password) {
-    showMessage("Vui lòng nhập đủ thông tin đăng nhập!", "error");
+    showMessage("Vui lòng nhập đủ thông tin!", "error");
     return;
   }
 
-  fetch("accounts.json")
-    .then(res => res.json())
-    .then(data => {
-      const user = data.users.find(
-        u => u.username.toLowerCase() === username.toLowerCase() && u.password === password
-      );
+  fetch(`${API_BASE}/api/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.ok) {
+        const userData = {
+          username: data.user,
+          role: data.role,
+          time: Date.now(),
+        };
+        if (remember) localStorage.setItem("user", JSON.stringify(userData));
+        else sessionStorage.setItem("user", JSON.stringify(userData));
 
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-
-        if (remember) {
-          localStorage.setItem("rememberUser", JSON.stringify(user));
-        } else {
-          localStorage.removeItem("rememberUser");
-        }
-
-        showMessage(`Xin chào ${user.username}!`, "success");
-        window.location.href = "index.html";
+        showMessage("Đăng nhập thành công!");
+        setTimeout(() => (window.location.href = "index.html"), 800);
       } else {
         showMessage("Sai tài khoản hoặc mật khẩu!", "error");
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(err);
-      showMessage("Không thể kết nối đến server!", "error");
+      showMessage("Lỗi kết nối tới server!", "error");
     });
 }
 
-// Kiểm tra quyền truy cập (tự động redirect nếu chưa đăng nhập)
-function ensureAuth() {
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-
-  if (!user) {
-    console.warn("⚠️ Không có user đăng nhập, quay lại login...");
-    window.location.href = "login.html";
-    return;
-  }
-
-  console.log(`✅ Authenticated: ${user.username} (${user.role})`);
-
-  // Cập nhật giao diện người dùng hiện tại
-  const userDisplay = document.querySelector("#currentUser");
-  if (userDisplay) {
-    userDisplay.textContent = user.username;
-  }
-
-  // Nếu là reminder page → chỉ giáo viên mới được sửa
-  const isReminder = window.location.pathname.includes("reminders.html");
-  if (isReminder && user.role !== "teacher" && user.role !== "admin") {
-    const editButtons = document.querySelectorAll(".edit-btn");
-    editButtons.forEach(btn => (btn.disabled = true));
-    showMessage("Bạn không có quyền chỉnh sửa nhắc nhở!", "warning");
-  }
-}
-
-// Lấy role hiện tại
+// Lấy user role
 function getUserRole() {
-  const user = JSON.parse(localStorage.getItem("user") || "null");
+  const user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
   return user ? user.role : null;
 }
 
 // Đăng xuất
 function logout() {
   localStorage.removeItem("user");
-  localStorage.removeItem("rememberUser");
-  showMessage("Đã đăng xuất!", "info");
+  sessionStorage.removeItem("user");
   window.location.href = "login.html";
-}
-
-// Tự động xác thực khi load trangdocument.addEventListener("DOMContentLoaded", () => {
-  const isLoginPage = window.location.pathname.includes("login.html");
-  const savedUser = JSON.parse(localStorage.getItem("rememberUser") || "null");
-
-  if (isLoginPage && savedUser) {
-    localStorage.setItem("user", JSON.stringify(savedUser));
-    window.location.href = "index.html";
-  } else if (!isLoginPage) {
-    ensureAuth();
-  }
 }
