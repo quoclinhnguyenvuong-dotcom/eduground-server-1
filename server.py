@@ -20,7 +20,8 @@ COMPRESS = True
 MAX_MEDIA_SIZE = 8 * 1024 * 1024
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "mp4", "webm", "mov", "mkv", "pdf"}
 
-OPENROUTER_API_KEY = os.environ.get("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")
+# Lấy API key từ biến môi trường đúng tên
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
 OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_MODEL = "z-ai/glm-4.5-air:free"
 
@@ -73,7 +74,7 @@ def allowed_filename(fname):
 def prune_loop():
     while True:
         try:
-            msgs_raw = load_json(DATA_FILE, {})
+            msgs_raw = load_json(DATA_FILE, dict)
             msgs = {}
             now = time.time()
             for room, val in msgs_raw.items():
@@ -133,7 +134,7 @@ def api_login():
     if not user or pw is None:
         return jsonify({"ok": False, "error": "Missing credentials"}), 400
 
-    accounts = load_json(ACCOUNTS_FILE, {}).get("users", [])
+    accounts = load_json(ACCOUNTS_FILE, dict).get("users", [])
     for entry in accounts:
         if entry["username"].lower() == user.lower() and entry["password"] == pw:
             return jsonify({"ok": True, "user": entry["username"], "role": entry["role"]})
@@ -144,7 +145,7 @@ def api_login():
 @app.route("/api/messages", methods=["GET", "POST"])
 def api_messages():
     if request.method == "GET":
-        raw = load_json(DATA_FILE, {})
+        raw = load_json(DATA_FILE, dict)
         out = {k: decompress_obj(v) if isinstance(v, str) else v for k, v in raw.items()}
         return jsonify(out)
 
@@ -164,7 +165,7 @@ def api_messages():
         "time": int(time.time())
     }
 
-    raw = load_json(DATA_FILE, {})
+    raw = load_json(DATA_FILE, dict)
     arr = decompress_obj(raw[room]) if room in raw and isinstance(raw[room], str) else raw.get(room, [])
     arr.append(msg)
     raw[room] = compress_obj(arr) if COMPRESS else arr
@@ -177,12 +178,13 @@ def api_messages():
 @app.route("/api/groups", methods=["GET", "POST"])
 def api_groups():
     if request.method == "GET":
-        return jsonify(load_json(GROUP_FILE, {}))
+        return jsonify(load_json(GROUP_FILE, dict))
 
     g = request.get_json(force=True)
     gid = g.get("id") or str(uuid.uuid4())
-    groups = load_json(GROUP_FILE, {})
-    groups[gid] = gsave_json(GROUP_FILE, groups)
+    groups = load_json(GROUP_FILE, dict)
+    groups[gid] = g
+    save_json(GROUP_FILE, groups)
     return jsonify({"ok": True, "id": gid})
 
 
@@ -214,7 +216,7 @@ def api_upload():
 @app.route("/api/reminders", methods=["GET", "POST"])
 def api_reminders():
     if request.method == "GET":
-        return jsonify(load_json(REMINDER_FILE, {}))
+        return jsonify(load_json(REMINDER_FILE, dict))
 
     data = request.get_json(force=True)
     text = data.get("text", "")
@@ -231,7 +233,7 @@ def api_reminders():
         "time": int(time.time())
     }
 
-    reminders = load_json(REMINDER_FILE, {})
+    reminders = load_json(REMINDER_FILE, dict)
     reminders[reminder["id"]] = reminder
     save_json(REMINDER_FILE, reminders)
 
@@ -265,18 +267,23 @@ def summarize_text(text):
 @app.route("/api/admin/clear", methods=["POST"])
 def admin_clear():
     key = request.headers.get("X-ADMIN-KEY")
-    accounts = load_json(ACCOUNTS_FILE, {}).get("users", [])
-    devtool_pw = next((u["password"] for u in accounts if u["username"] == "devtool"), None)
-    if key != devtool_pw:
-        if user_role != "admin":
-            return jsonify({"ok": False, "error": "forbidden"}), 403
+    accounts = load_json(ACCOUNTS_FILE, dict).get("users", [])
+    devtool_pw = next((u["password"] for u in accounts if u.get("username") == "devtool"), None)
 
-save_json(DATA_FILE, {})
-      try:
-        shutil.rmtree(UPLOADS_DIR)
+    if key != devtool_pw:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    # Clear messages
+    save_json(DATA_FILE, {})
+
+    # Clear uploads directory safely
+    try:
+        if os.path.exists(UPLOADS_DIR):
+            shutil.rmtree(UPLOADS_DIR)
         os.makedirs(UPLOADS_DIR, exist_ok=True)
     except Exception as e:
         print("Clear uploads error:", e)
+        return jsonify({"ok": False, "error": "clear uploads failed"}), 500
 
     return jsonify({"ok": True})
 
