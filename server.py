@@ -90,7 +90,8 @@ def prune_loop():
                 p = os.path.join(UPLOADS_DIR, fname)
                 if os.path.isfile(p):
                     age = now - os.path.getmtime(p)
-                    if age > TTL_SECONDS_MEDIA:try:
+                    if age > TTL_SECONDS_MEDIA:
+                        try:
                             os.remove(p)
                             print("🗑️ Removed old upload:", fname)
                         except Exception as e:
