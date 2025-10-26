@@ -269,7 +269,7 @@ def admin_clear():
     devtool_pw = next((u["password"] for u in accounts if u["username"] == "devtool"), None)
     if key != devtool_pw:
         if user_role != "admin":
-    return jsonify({"ok": False, "error": "forbidden"}), 403
+            return jsonify({"ok": False, "error": "forbidden"}), 403
 
 save_json(DATA_FILE, {})
     try:
