@@ -101,4 +101,4 @@ function logout() {
   } else if (!isLoginPage) {
     ensureAuth();
   }
-});
+}
