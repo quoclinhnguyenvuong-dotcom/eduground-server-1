@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>EduGround – Reminders</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #2563eb;
+      color: white;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    header .user-info {
+      font-size: 14px;
+    }
+    main {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      height: calc(100vh - 54px);
+    }
+    aside {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    aside h2 {
+      font-size: 16px;
+      border-bottom: 1px solid #475569;
+      padding-bottom: 6px;
+      margin-bottom: 6px;
+    }
+    aside .fixed, aside .settings {
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    aside button {
+      padding: 6px 10px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    aside button:hover {
+      background: #60a5fa;
+    }
+    section {
+      padding: 16px;
+      overflow-y: auto;
+    }
+    form {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    form h2 {
+      font-size: 18px;
+      margin-top: 0;
+    }
+    form input, form textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0 10px 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    form input[type=file] {
+      border: none;
+    }
+    form button {
+      background: #2563eb;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    form button:hover {
+      background: #1d4ed8;
+    }
+    .reminder {
+      background: white;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .reminder h3 {
+      margin: 0 0 6px;
+      color: #1e293b;
+    }
+    .reminder small {
+      color: #6b7280;
+    }
+    .reminder p {
+      margin: 8px 0;
+      white-space: pre-wrap;
+    }
+    .attachments a {
+      display: inline-block;
+      background: #e0f2fe;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin: 3px;
+      text-decoration: none;
+      color: #0369a1;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EduGround Reminder Center</h1>
+    <div class="user-info" id="user-info">Chưa đăng nhập</div>
+  </header>
+
+  <main>
+    <aside>
+      <div class="fixed">
+        <h2>Thông báo cố định</h2>
+        <ul id="fixed-list"><li>Trực nhật: 7C</li>
+          <li>Kiểm tra 15': Toán - Tiết 2</li>
+        </ul>
+      </div>
+      <div class="settings">
+        <h2>Cài đặt</h2>
+        <button id="reload-btn">🔄 Làm mới</button>
+        <button id="logout-btn">🚪 Đăng xuất</button>
+      </div>
+    </aside>
+
+    <section>
+      <form id="reminder-form">
+        <h2>Tạo Reminder mới</h2>
+        <label>Lớp học *</label>
+        <input type="text" id="class" placeholder="VD: 7C" required />
+        <label>Nội dung STT / bài giảng *</label>
+        <textarea id="transcript" rows="6" placeholder="Dán STT hoặc ghi chú bài giảng tại đây..." required></textarea>
+        <label>Tài liệu đính kèm (tùy chọn)</label>
+        <input type="file" id="file" multiple />
+        <button type="submit">📤 Gửi Reminder</button>
+      </form>
+
+      <div id="reminder-list"></div>
+    </section>
+  </main>
+
+  <script>
+    const API = location.origin + "/api";
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const infoBox = document.getElementById("user-info");
+    if (user.user) infoBox.textContent = user.user + " (" + user.role + ")";
+    else window.location.href = "login.html";
+
+    async function fetchReminders() {
+      const res = await fetch(API + "/reminders");
+      const data = await res.json();
+      renderReminders(data);
+    }
+
+    function renderReminders(data) {
+      const cont = document.getElementById("reminder-list");
+      cont.innerHTML = "";
+      const arr = Object.values(data).sort((a,b)=>b.time - a.time);
+      for (let r of arr) {
+        const el = document.createElement("div");
+        el.className = "reminder";
+        el.innerHTML = `
+          <h3>${r.class} – ${r.teacher}</h3>
+          <small>${new Date(r.time*1000).toLocaleString()}</small>
+          <p><b>Tóm tắt:</b><br>${r.summary || "(chưa có tóm tắt)"}</p>
+          ${r.attachments?.length ? 
+            `<div class="attachments">${r.attachments.map(a=>`<a href="${a}" target="_blank">${a.split('/').pop()}</a>`).join('')}</div>` 
+            : ""}
+          <details><summary>Chi tiết STT</summary><p>${r.transcript}</p></details>
+        `;
+        cont.appendChild(el);
+      }
+    }
+
+    document.getElementById("reminder-form").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const cls = document.getElementById("class").value.trim();
+      const transcript = document.getElementById("transcript").value.trim();
+      if (!cls || !transcript) return alert("Vui lòng nhập đầy đủ thông tin!");
+
+      let attachments = [];
+      const files = document.getElementById("file").files;
+      if (files.length) {
+        for (let f of files) {
+          const fd = new FormData();
+          fd.append("file", f);
+          const res = await fetch(API + "/upload", { method: "POST", body: fd });
+          const data = await res.json();
+          if (data.ok) attachments.push(data.url);}
+      }
+
+      const payload = {
+        class: cls,
+        teacher: user.user || "unknown",
+        transcript,
+        attachments
+      };
+
+      const res = await fetch(API + "/reminders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert("Tạo reminder thành công!");
+        document.getElementById("transcript").value = "";
+        document.getElementById("file").value = "";
+        fetchReminders();
+      } else {
+        alert("Lỗi: " + (data.error || "Không rõ"));
+      }
+    });
+
+    document.getElementById("reload-btn").onclick = fetchReminders;
+    document.getElementById("logout-btn").onclick = ()=>{
+      localStorage.removeItem("user");
+      window.location.href = "login.html";
+    };
+    <script src="js/auth.js"></script>
+<script>
+  ensureAuth(); // kiểm tra trạng thái login mỗi khi vào trang
+</script>
+
+    fetchReminders();
+  </script>
+</body>
+</html>

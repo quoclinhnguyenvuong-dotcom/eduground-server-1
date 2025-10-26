@@ -26,11 +26,10 @@
       <div class="links">
         <a href="index.html">Trang chủ</a>
         <a href="messages.html">Tin nhắn</a>
-        <a href="reminder.html">Reminder</a>
+        <a href="reminders.html">Reminder</a>
         <a href="soday.html">Sổ đầu bài</a>
         <a href="chatbot.html">Chatbot</a>
         <a href="meeting.html">Meeting</a>
-        <a href="login.html">Đăng Xuất</a>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
@@ -70,6 +69,10 @@
   } else {
     document.getElementById('welcomeText').innerHTML = `Chào mừng <b>${username}</b>, chúc bạn một ngày vui vẻ 🌞`;
   }
+  <script src="js/auth.js"></script>
+<script>
+  ensureAuth(); // kiểm tra trạng thái login mỗi khi vào trang
+</script>
 </script>
 </body>
 </html>

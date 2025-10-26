@@ -1,36 +1,49 @@
-# server.py
+# server.py – EduGround Backend (Render-ready version)
+# ----------------------------------------------------
+# Features:
+# - Serve static frontend in /web
+# - Login API reads from web/data/accounts.json
+# - Messages, Groups, Reminders JSON stored locally
+# - File uploads to /uploads
+# - No enforced login server-side (handled by frontend)
+# - Clean periodic data pruning
+# - Compatible with Render.com deployment
+
 from flask import Flask, jsonify, request, send_from_directory, abort
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os, json, time, zlib, base64, threading, uuid, shutil
 
-# --- CONFIG ---
+# ===================== CONFIG =====================
 WEB_DIR = "web"
 UPLOADS_DIR = "uploads"
-DATA_FILE = "messages.json"       # compressed by chat room keys
+DATA_FILE = "messages.json"
 GROUP_FILE = "groups.json"
-ACCOUNTS_FILE = "accounts.json"
-TTL_SECONDS_TEXT = 60 * 60 * 24 * 60   # 60 days default for text (you said 30/60 earlier; adjust)
-TTL_SECONDS_MEDIA = 60 * 60 * 24 * 30  # 30 days for media
-COMPRESS = True
-MAX_MEDIA_SIZE = 8 * 1024 * 1024  # 8MB max upload
+REMINDER_FILE = "reminders.json"
+ACCOUNTS_FILE = os.path.join(WEB_DIR, "data", "accounts.json")
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
+for f in [DATA_FILE, GROUP_FILE, REMINDER_FILE]:
+    if not os.path.exists(f):
+        with open(f, "w", encoding="utf-8") as ff:
+            json.dump({}, ff, ensure_ascii=False, indent=2)
 
-app = Flask(__name__, static_folder=WEB_DIR, static_url_path='/')
+# Retention policy (30 days)
+TTL_TEXT = 60 * 60 * 24 * 30
+TTL_MEDIA = 60 * 60 * 24 * 30
+MAX_MEDIA_SIZE = 16 * 1024 * 1024
+ALLOWED_EXT = {"png","jpg","jpeg","gif","mp4","webm","mov","mkv","pdf","wav","mp3","ogg"}
+
+app = Flask(__name__, static_folder=WEB_DIR, static_url_path="")
 CORS(app)
 
-# ---- helpers ----
-def load_json(path, default_factory=dict):
+# ===================== HELPERS =====================
+def load_json(path, default=None):
     try:
-        if not os.path.exists(path):
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(default_factory(), f, ensure_ascii=False, indent=2)
-            return default_factory()
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
-        return default_factory()
+        return default if default is not None else {}
 
 def save_json(path, data):
     tmp = path + ".tmp"
@@ -49,135 +62,100 @@ def decompress_obj(s):
     except Exception:
         return []
 
-# --- background prune thread ---
+def allowed_filename(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXT
+
+# ===================== PRUNING THREAD =====================
 def prune_loop():
     while True:
+        now = time.time()
         try:
-            # prune messages (keep by TTL)
-            msgs_raw = load_json(DATA_FILE, {})
-            msgs = {}
-            now = time.time()
-            for room, val in msgs_raw.items():
-                # decompress if string
-                arr = val
-                if isinstance(val, str):
-                    arr = decompress_obj(val)
-                # keep messages under TTL_SECONDS_TEXT
-                arr2 = [m for m in arr if (now - m.get("time", now)) < TTL_SECONDS_TEXT]
-                msgs[room] = arr2
-            # save compressed
-            out = {k: compress_obj(v) if COMPRESS else v for k, v in msgs.items()}
-            save_json(DATA_FILE, out)
+            msgs = load_json(DATA_FILE, {})
+            new_msgs = {}
+            for k, v in msgs.items():
+                arr = decompress_obj(v) if isinstance(v, str) else v
+                arr = [m for m in arr if now - m.get("time", now) < TTL_TEXT]
+                new_msgs[k] = compress_obj(arr)
+            save_json(DATA_FILE, new_msgs)
         except Exception as e:
-            print("Prune messages error:", e)
+            print("Prune message error:", e)
 
-        # prune uploads older than TTL_SECONDS_MEDIA
         try:
-            now = time.time()
-            for fname in os.listdir(UPLOADS_DIR):
-                p = os.path.join(UPLOADS_DIR, fname)
-                if os.path.isfile(p):
-                    age = now - os.path.getmtime(p)
-                    if age > TTL_SECONDS_MEDIA:
-                        try:
-                            os.remove(p)
-                        except: pass
+            for f in os.listdir(UPLOADS_DIR):
+                path = os.path.join(UPLOADS_DIR, f)
+                if os.path.isfile(path):age = now - os.path.getmtime(path)
+                    if age > TTL_MEDIA:
+                        os.remove(path)
         except Exception as e:
-            print("Prune uploads error:", e)
+            print("Prune upload error:", e)
 
-        time.sleep(60 * 60)  # run every hour
+        time.sleep(3600)  # every hour
 
 threading.Thread(target=prune_loop, daemon=True).start()
 
-# ---- static / index routes ----
-@app.route('/')
+# ===================== STATIC =====================
+@app.route("/")
 def index():
-    return send_from_directory(WEB_DIR, 'index.html')
+    return send_from_directory(WEB_DIR, "login.html")
 
-@app.route('/<path:fp>')
-def static_proxy(fp):
-    # serve from web folder (HTML, assets)
-    if os.path.exists(os.path.join(WEB_DIR, fp)):
-        return send_from_directory(WEB_DIR, fp)
-    # serve uploads
-    if os.path.exists(os.path.join(UPLOADS_DIR, fp)):
-        return send_from_directory(UPLOADS_DIR, fp)
+@app.route("/<path:path>")
+def static_proxy(path):
+    web_path = os.path.join(WEB_DIR, path)
+    if os.path.isfile(web_path):
+        return send_from_directory(WEB_DIR, path)
+    upload_path = os.path.join(UPLOADS_DIR, path)
+    if os.path.isfile(upload_path):
+        return send_from_directory(UPLOADS_DIR, path)
     return abort(404)
 
-# ---- API: accounts / login ----
-@app.route('/api/login', methods=['POST'])
+# ===================== API =====================
+
+# ---------- LOGIN ----------
+@app.route("/api/login", methods=["POST"])
 def api_login():
     data = request.get_json(force=True)
-    user = data.get("username")
-    pw = data.get("password")
-    if not user or pw is None:
-        return jsonify({"ok": False, "error": "Missing credentials"}), 400
-    accounts = load_json(ACCOUNTS_FILE, {})
-    # accounts expected: { "username": {"password":"..","role":".."}, ... }
-    entry = accounts.get(user)
-    if not entry:
-        # try case-insensitive match (useful when names have diacritics)
-        for k, v in accounts.items():
-            if k.lower() == user.lower():
-                entry = v
-                user = k
-                break
-    if entry and entry.get("password") == pw:
-        return jsonify({"ok": True, "user": user, "role": entry.get("role", "student")})
+    username = data.get("username", "").strip()
+    password = data.get("password", "").strip()
+    accounts = load_json(ACCOUNTS_FILE, {"users": []}).get("users", [])
+
+    for acc in accounts:
+        if acc["username"].lower() == username.lower() and acc["password"] == password:
+            return jsonify({"ok": True, "user": acc["username"], "role": acc["role"]})
     return jsonify({"ok": False, "error": "Invalid credentials"}), 401
 
-# ---- API: messages ----
-@app.route('/api/messages', methods=['GET'])
-def api_messages_get():
-    # returns decompressed messages dict: { room: [...] }
-    raw = load_json(DATA_FILE, {})
-    out = {}
-    for k, v in raw.items():
-        if isinstance(v, str):
-            out[k] = decompress_obj(v)
-        else:
-            out[k] = v
-    return jsonify(out)
 
-@app.route('/api/messages', methods=['POST'])
-def api_messages_post():
-    data = request.get_json(force=True)
-    room = data.get("chat_id")
+# ---------- MESSAGES ----------
+@app.route("/api/messages", methods=["GET", "POST"])
+def api_messages():
+    if request.method == "GET":
+        data = load_json(DATA_FILE, {})
+        out = {k: decompress_obj(v) for k, v in data.items()}
+        return jsonify(out)
+
+    payload = request.get_json(force=True)
+    room = payload.get("chat_id")
     if not room:
         return jsonify({"ok": False, "error": "missing chat_id"}), 400
-    # sanity fields
+
     msg = {
         "id": str(uuid.uuid4()),
-        "from": data.get("from", "unknown"),
-        "text": data.get("text", "")[:10000],
-        "type": data.get("type", "text"),
-        "media": data.get("media", None),
-        "reply_to": data.get("reply_to"),
-        "meta": data.get("meta", {}),
+        "from": payload.get("from", "unknown"),
+        "text": payload.get("text", ""),
         "time": int(time.time())
     }
-    raw = load_json(DATA_FILE, {})
-    # decompress if needed
-    arr = []
-    if room in raw:
-        if isinstance(raw[room], str):
-            arr = decompress_obj(raw[room])
-        else:
-            arr = raw[room]
+    data = load_json(DATA_FILE, {})
+    arr = decompress_obj(data.get(room, ""))
     arr.append(msg)
-    # compress and save
-    raw[room] = compress_obj(arr) if COMPRESS else arr
-    save_json(DATA_FILE, raw)
+    data[room] = compress_obj(arr)
+    save_json(DATA_FILE, data)
     return jsonify({"ok": True, "msg_id": msg["id"]})
 
-# ---- API: groups ----
-@app.route('/api/groups', methods=['GET'])
-def api_groups_get():
-    g = load_json(GROUP_FILE, {})
-    return jsonify(g)
 
-@app.route('/api/groups', methods=['POST'])
-def api_groups_post():
+# ---------- GROUPS ----------
+@app.route("/api/groups", methods=["GET", "POST"])
+def api_groups():
+    if request.method == "GET":
+        return jsonify(load_json(GROUP_FILE, {}))
     g = request.get_json(force=True)
     gid = g.get("id") or str(uuid.uuid4())
     groups = load_json(GROUP_FILE, {})
@@ -185,52 +163,44 @@ def api_groups_post():
     save_json(GROUP_FILE, groups)
     return jsonify({"ok": True, "id": gid})
 
-# ---- API: file upload (media) ----
-ALLOWED_EXT = set(["png","jpg","jpeg","gif","mp4","webm","mov","mkv","pdf"])
-def allowed(fname):
-    ext = fname.rsplit(".",1)[-1].lower() if "." in fname else ""
-    return ext in ALLOWED_EXT
 
-@app.route('/api/upload', methods=['POST'])
+# ---------- UPLOAD ----------
+@app.route("/api/upload", methods=["POST"])
 def api_upload():
-    if 'file' not in request.files:
+    if "file" not in request.files:
         return jsonify({"ok": False, "error": "no file"}), 400
-    f = request.files['file']
-    if f.filename == "":
-        return jsonify({"ok": False, "error": "empty filename"}), 400
-    if not allowed(f.filename):
-        return jsonify({"ok": False, "error": "file type not allowed"}), 400
-    fname = secure_filename(str(uuid.uuid4()) + "-" + f.filename)
+    f = request.files["file"]
+    if not allowed_filename(f.filename):
+        return jsonify({"ok": False, "error": "file type not allowed"}), 400fname = secure_filename(f"{uuid.uuid4()}-{f.filename}")
     dest = os.path.join(UPLOADS_DIR, fname)
     f.save(dest)
-    size = os.path.getsize(dest)
-    if size > MAX_MEDIA_SIZE:
-        # remove and reject
-        try: os.remove(dest)
-        except: pass
+
+    if os.path.getsize(dest) > MAX_MEDIA_SIZE:
+        os.remove(dest)
         return jsonify({"ok": False, "error": "file too large"}), 400
-    url = f"/{UPLOADS_DIR}/{fname}"
-    return jsonify({"ok": True, "url": url, "name": fname})
 
-# ---- admin endpoint: clear all (restricted in UI to devtool role) ----
-@app.route('/api/admin/clear', methods=['POST'])
-def admin_clear():
-    # simple api key via header or body for demo. In production protect properly.
-    key = request.headers.get("X-ADMIN-KEY") or request.json.get("key") if request.is_json else None
-    accounts = load_json(ACCOUNTS_FILE, {})
-    if key != accounts.get("devtool", {}).get("password"):
-        return jsonify({"ok": False, "error": "forbidden"}), 403
-    # remove data
-    save_json(DATA_FILE, {})
-    # remove uploads
-    try:
-        shutil.rmtree(UPLOADS_DIR)
-        os.makedirs(UPLOADS_DIR, exist_ok=True)
-    except Exception as e:
-        print("clear uploads err", e)
-    return jsonify({"ok": True})
+    return jsonify({"ok": True, "url": f"/{UPLOADS_DIR}/{fname}"})
 
-# ---- run ----
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+
+# ---------- REMINDERS ----------
+@app.route("/api/reminders", methods=["GET", "POST"])
+def api_reminders():
+    if request.method == "GET":
+        return jsonify(load_json(REMINDER_FILE, {}))
+
+    r = request.get_json(force=True)
+    rid = str(uuid.uuid4())
+    reminders = load_json(REMINDER_FILE, {})
+    reminders[rid] = {
+        "id": rid,
+        "teacher": r.get("teacher"),
+        "class": r.get("class"),
+        "summary": r.get("summary"),
+        "timestamp": int(time.time())
+    }
+    save_json(REMINDER_FILE, reminders)
+    return jsonify({"ok": True, "id": rid})
+
+# -------------------------------------------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000, debug=True)
