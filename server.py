@@ -272,7 +272,7 @@ def admin_clear():
             return jsonify({"ok": False, "error": "forbidden"}), 403
 
 save_json(DATA_FILE, {})
-    try:
+      try:
         shutil.rmtree(UPLOADS_DIR)
         os.makedirs(UPLOADS_DIR, exist_ok=True)
     except Exception as e:
