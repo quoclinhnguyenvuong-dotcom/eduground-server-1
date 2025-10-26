@@ -4,97 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng nhập - EduGround</title>
-  <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: linear-gradient(135deg, #74b9ff, #81ecec);
-      margin: 0;
-      padding: 0;
-      display: flex;
-      height: 100vh;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .login-container {
-      background: #fff;
-      padding: 30px 40px;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 380px;
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 25px;
-      color: #0984e3;
-      font-weight: 700;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #dfe6e9;
-      border-radius: 8px;
-      font-size: 15px;
-      outline: none;
-      transition: 0.2s;
-    }
-
-    input:focus {
-      border-color: #0984e3;
-      box-shadow: 0 0 5px rgba(9, 132, 227, 0.4);
-    }
-
-    button {
-      width: 100%;
-      background: #0984e3;
-      border: none;
-      color: white;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      margin-top: 10px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #74b9ff;
-    }
-
-    .msg {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #d63031;
-    }
-
-    footer {
-      position: absolute;
-      bottom: 15px;
-      width: 100%;
-      text-align: center;
-      font-size: 13px;
-      color: #555;
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div class="login-container">
-    <h2>EduGround Login</h2>
-    <form id="loginForm" onsubmit="doLogin(event)">
-      <input type="text" id="username" placeholder="Tên đăng nhập" required />
-      <input type="password" id="password" placeholder="Mật khẩu" required />
-      <button type="submit">Đăng nhập</button>
-    </form>
-    <div id="msg" class="msg"></div>
+    <h1>Đăng nhập hệ thống</h1>
+
+    <div class="form-group">
+      <label>Tên đăng nhập:</label>
+      <input type="text" id="username" placeholder="Nhập tên..." />
+    </div>
+
+    <div class="form-group">
+      <label>Mật khẩu:</label>
+      <input type="password" id="password" placeholder="••••••" />
+    </div>
+
+    <div class="form-group remember">
+      <label><input type="checkbox" id="remember" /> Ghi nhớ đăng nhập</label>
+    </div>
+
+    <button onclick="doLogin()">Đăng nhập</button>
+
+    <p id="msg" style="color:red;margin-top:10px"></p>
   </div>
 
-  <footer>© 2025 EduGround - All rights reserved</footer>
-
-  <!-- Script -->
+  <!-- ✅ Luôn để script ở cuối body -->
   <script src="js/auth.js"></script>
 </body>
 </html>
