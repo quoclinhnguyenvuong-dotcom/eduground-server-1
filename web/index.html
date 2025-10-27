@@ -71,8 +71,12 @@
     document.getElementById('welcomeText').innerHTML = `Chào mừng <b>${username}</b>, chúc bạn một ngày vui vẻ 🌞`;
   }
   <script src="/js/auth.js"></script>
-<script src="/js/auth.js"></script>
-<script>ensureAuth();</script>
+<script src="/js/auth.js" defer></script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    ensureAuth();
+  });
+</script>
 </body>
 </html>
 </script>
