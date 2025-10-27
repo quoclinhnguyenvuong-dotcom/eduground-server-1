@@ -1,35 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Đăng nhập - EduGround</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Đăng nhập — Eduground</title>
+  <link rel="icon" href="assets/logo.png">
+  <style>
+    body{font-family:Inter,Segoe UI,Arial;background:#f5f7fb;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .box{width:340px;background:#fff;padding:28px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
+    h2{color:#0078d7;margin:0 0 12px}
+    input{width:100%;padding:10px;margin:8px 0;border:1px solid #d0d6df;border-radius:8px}
+    button{width:100%;padding:10px;background:#0078d7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600}
+    .small{font-size:13px;color:#666;margin-top:8px;text-align:center}
+  </style>
 </head>
 <body>
-  <div class="login-container">
-    <h1>Đăng nhập hệ thống</h1>
-
-    <div class="form-group">
-      <label>Tên đăng nhập:</label>
-      <input type="text" id="username" placeholder="Nhập tên..." />
-    </div>
-
-    <div class="form-group">
-      <label>Mật khẩu:</label>
-      <input type="password" id="password" placeholder="••••••" />
-    </div>
-
-    <div class="form-group remember">
-      <label><input type="checkbox" id="remember" /> Ghi nhớ đăng nhập</label>
-    </div>
-
-    <button onclick="doLogin()">Đăng nhập</button>
-
-    <p id="msg" style="color:red;margin-top:10px"></p>
+  <div class="box">
+    <h2>Đăng nhập Eduground</h2>
+    <input id="username" placeholder="Tên đăng nhập" autocomplete="username">
+    <input id="password" type="password" placeholder="Mật khẩu" autocomplete="current-password">
+    <label style="display:flex;align-items:center;gap:8px;margin-top:6px">
+      <input id="remember" type="checkbox"> Ghi nhớ
+    </label>
+    <div style="height:10px"></div>
+    <button id="btnLogin">Đăng nhập</button>
+    <div id="msg" class="small"></div>
   </div>
 
-  <!-- ✅ Luôn để script ở cuối body -->
+  <!-- auth script (phải nằm sau DOM) -->
   <script src="js/auth.js"></script>
+  <script>
+    // hook button (login action)
+    document.getElementById('btnLogin').addEventListener('click', doLogin);
+
+    // nếu đã login (remember), chuyển thẳng
+    (function(){
+      const u = JSON.parse(localStorage.getItem('user')||'null');
+      if(u && u.username && u.password){
+        // nếu đã nhớ, tự gọi xác nhận (gọn)
+        // gọi ensureAuth để kiểm tra token / credentials
+        ensureAuth();
+      }
+    })();
+  </script>
 </body>
 </html>
