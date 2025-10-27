@@ -1,47 +1,117 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Đăng nhập — Eduground</title>
-  <link rel="icon" href="assets/logo.png">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduGround - Đăng nhập</title>
   <style>
-    body{font-family:Inter,Segoe UI,Arial;background:#f5f7fb;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
-    .box{width:340px;background:#fff;padding:28px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.06)}
-    h2{color:#0078d7;margin:0 0 12px}
-    input{width:100%;padding:10px;margin:8px 0;border:1px solid #d0d6df;border-radius:8px}
-    button{width:100%;padding:10px;background:#0078d7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600}
-    .small{font-size:13px;color:#666;margin-top:8px;text-align:center}
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .login-box {
+      background: white;
+      padding: 25px 35px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      width: 320px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    #status {
+      margin-top: 10px;
+      color: red;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h2>Đăng nhập Eduground</h2>
-    <input id="username" placeholder="Tên đăng nhập" autocomplete="username">
-    <input id="password" type="password" placeholder="Mật khẩu" autocomplete="current-password">
-    <label style="display:flex;align-items:center;gap:8px;margin-top:6px">
-      <input id="remember" type="checkbox"> Ghi nhớ
-    </label>
-    <div style="height:10px"></div>
-    <button id="btnLogin">Đăng nhập</button>
-    <div id="msg" class="small"></div>
+  <div class="login-box">
+    <h2>Đăng nhập hệ thống</h2>
+    <input id="username" type="text" placeholder="Tên đăng nhập" />
+    <input id="password" type="password" placeholder="Mật khẩu" />
+    <label><input id="remember" type="checkbox" /> Ghi nhớ</label>
+    <button id="loginBtn">Đăng nhập</button>
+    <div id="status"></div>
   </div>
 
-  <!-- auth script (phải nằm sau DOM) -->
-  <script src="js/auth.js"></script>
+  <script src="/static/js/auth.js"></script>
   <script>
-    // hook button (login action)
-    document.getElementById('btnLogin').addEventListener('click', doLogin);
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("✅ Login page loaded");
 
-    // nếu đã login (remember), chuyển thẳng
-    (function(){
-      const u = JSON.parse(localStorage.getItem('user')||'null');
-      if(u && u.username && u.password){
-        // nếu đã nhớ, tự gọi xác nhận (gọn)
-        // gọi ensureAuth để kiểm tra token / credentials
-        ensureAuth();
+      // Kiểm tra nếu đã login thì chuyển luôn, KHÔNG reload chính nó
+      const user = localStorage.getItem("eduground_user");
+      if (user) {
+        console.log("Đã đăng nhập sẵn → chuyển qua index.html");
+        window.location.replace("index.html");
+        return;
       }
-    })();
+
+      // Sự kiện đăng nhập
+      const btn = document.querySelector("#loginBtn");
+      const status = document.querySelector("#status");
+
+      btn.addEventListener("click", async () => {
+        const username = document.querySelector("#username").value.trim();
+        const password = document.querySelector("#password").value.trim();
+        const remember = document.querySelector("#remember").checked;
+
+        if (!username || !password) {
+          status.textContent = "Vui lòng nhập đủ thông tin!";
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password, remember })
+          });
+
+          if (!res.ok) {
+            status.textContent = "Sai tài khoản hoặc mật khẩu!";
+            return;
+          }
+
+          const data = await res.json();
+          if (data.ok) {
+            localStorage.setItem("eduground_user", JSON.stringify(data));console.log("✅ Login success", data);
+            window.location.replace("index.html");
+          } else {
+            status.textContent = "Sai tài khoản hoặc mật khẩu!";
+          }
+        } catch (err) {
+          console.error("Lỗi đăng nhập:", err);
+          status.textContent = "Không kết nối được máy chủ!";
+        }
+      });
+    });
   </script>
 </body>
 </html>
