@@ -1,186 +1,51 @@
 {
-  "devtool": {
-    "password": "devpass",
-    "role": "admin"
-  },
-  "giaovien": {
-    "password": "giaovien",
-    "role": "teacher"
-  },
-  "Lê Hữu An": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Quang Gia Bảo": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Quốc Anh Duy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Lê Kim Hạnh": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Đỗ Trần Gia Hân": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Doãn Huy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Ngô Minh Khang": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Bảo Khang": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Ngô Hoàng Đăng Khôi": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Trung Kiên": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Đỗ Nguyễn Sĩ Lâm": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Minh Lâm": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Chu Sa My": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trịnh Bảo Ngân": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Thị Bảo Ngọc": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Thành Nhân": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Đỗ Trần Minh Phú": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Vũ Minh Phúc": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Dương Bảo Quân": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Võ Ngọc Bảo Quân": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Huỳnh Bá Huy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Hồng Thuận": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Ngọc Kim Thủy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Đỗ Quốc Tiến": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Huỳnh Thái Toàn": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Mai Thùy Trang": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Ngọc Thảo Trâm": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Thành Trọng": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Ngọc Thanh Trúc": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Tống Nhật Trung": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Ngọc Nhã Uyên": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Đỗ Nhã Vy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Hoàng Bảo Vy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Tô Hoàng Lê Vy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Thanh Bảo Vy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trương Thụy Khánh Vy": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Phạm Bảo Xuân": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Đỗ Ngọc Như Ý": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Kim Yến": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Thái Huỳnh Mỹ Anh": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Ngọc": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Kim Chi": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Nguyễn Khôi Nguyên": {
-    "password": "12345",
-    "role": "student"
-  },
-  "Trần Ngọc Bảo Nghi": {
-    "password": "12345",
-    "role": "student"
-  }
+  "users": [
+    { "username": "devtool", "password": "devpass", "role": "admin" },
+    { "username": "giaovien", "password": "giaovien", "role": "teacher" },
+    { "username": "Truc Linh", "password": "12345", "role": "leader" },
+    { "username": "Bao Khang", "password": "12345", "role": "assistant" },
+    { "username": "Huu An", "password": "12345", "role": "student" },
+    { "username": "Gia Bao", "password": "12345", "role": "student" },
+    { "username": "Anh Duy", "password": "12345", "role": "student" },
+    { "username": "Kim Hanh", "password": "12345", "role": "student" },
+    { "username": "Gia Han", "password": "12345", "role": "student" },
+    { "username": "Doan Huy", "password": "12345", "role": "student" },
+    { "username": "Minh Khang", "password": "12345", "role": "student" },
+    { "username": "Dang Khoi", "password": "12345", "role": "student" },
+    { "username": "Trung Kien", "password": "12345", "role": "student" },
+    { "username": "Si Lam", "password": "12345", "role": "student" },
+    { "username": "Minh Lam", "password": "12345", "role": "student" },
+    { "username": "Sa My", "password": "12345", "role": "student" },
+    { "username": "Bao Ngan", "password": "12345", "role": "student" },
+    { "username": "Bao Ngoc", "password": "12345", "role": "student" },
+    { "username": "Minh Ngoc", "password": "12345", "role": "student" },
+    { "username": "Thanh Nhan", "password": "12345", "role": "student" },
+    { "username": "Minh Phu", "password": "12345", "role": "student" },
+    { "username": "Minh Phuc", "password": "12345", "role": "student" },
+    { "username": "Bao Quan", "password": "12345", "role": "student" },
+    { "username": "Ba Huy", "password": "12345", "role": "student" },
+    { "username": "Hong Thuan", "password": "12345", "role": "student" },
+    { "username": "Kim Thuy", "password": "12345", "role": "student" },
+    { "username": "Quoc Tien", "password": "12345", "role": "student" },
+    { "username": "Thai Toan", "password": "12345", "role": "student" },
+    { "username": "Thuy Trang", "password": "12345", "role": "student" },
+    { "username": "Thao Tram", "password": "12345", "role": "student" },
+    { "username": "Thanh Trong", "password": "12345", "role": "student" },
+    { "username": "Thanh Truc", "password": "12345", "role": "student" },
+    { "username": "Nhat Trung", "password": "12345", "role": "student" },
+    { "username": "Nha Uyen", "password": "12345", "role": "student" },
+    { "username": "Nha Vy", "password": "12345", "role": "student" },
+    { "username": "Nguyen Bao Vy", "password": "12345", "role": "student" },
+    { "username": "Le Vy", "password": "12345", "role": "student" },
+    { "username": "Tran Bao Vy", "password": "12345", "role": "student" },
+    { "username": "Khanh Vy", "password": "12345", "role": "student" },
+    { "username": "Bao Xuan", "password": "12345", "role": "student" },
+    { "username": "Nhu Y", "password": "12345", "role": "student" },
+    { "username": "Kim Yen", "password": "12345", "role": "student" },
+    { "username": "My Anh", "password": "12345", "role": "student" },
+    { "username": "Nguyen Ngoc", "password": "12345", "role": "student" },
+    { "username": "Kim Chi", "password": "12345", "role": "student" },
+    { "username": "Khoi Nguyen", "password": "12345", "role": "student" },
+    { "username": "Bao Nghi", "password": "12345", "role": "student" }
+  ]
 }
