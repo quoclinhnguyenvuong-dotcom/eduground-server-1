@@ -77,10 +77,15 @@
     ensureAuth();
   });
 </script>
-</body>
-</html>
+
 </script>
-</body>
-</html>
+<script src="/static/js/auth.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    const user = await window.auth.ensureAuth();
+    if (!user) return;
+    document.querySelector("#currentUser")?.textContent = user.username;
+  });
+</script>
 </body>
 </html>
