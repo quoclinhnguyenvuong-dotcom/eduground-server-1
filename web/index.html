@@ -8,9 +8,10 @@
   <style>
     body {
       font-family: "Segoe UI", sans-serif;
-      background: #f5f5f5;
+      background: #f9fafb;
       margin: 0;
       padding: 0;
+      color: #111827;
     }
 
     header {
@@ -20,40 +21,98 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     header h1 {
       margin: 0;
-      font-size: 1.4rem;
+      font-size: 1.2rem;
+      font-weight: 600;
     }
 
     #user-info {
       font-size: 0.9rem;
     }
 
-    main {
-      padding: 2rem;
-      text-align: center;
-    }
-
     .logout-btn {
       background: #ef4444;
       color: white;
       border: none;
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
+      margin-left: 10px;
+      font-size: 0.85rem;
     }
 
     .logout-btn:hover {
       background: #dc2626;
     }
 
+    main {
+      padding: 2rem;
+      text-align: center;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    main h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #1f2937;
+    }
+
+    main p {
+      color: #4b5563;
+      margin-bottom: 2rem;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .feature-box {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      text-align: left;
+      transition: transform 0.2s;
+    }
+
+    .feature-box:hover {
+      transform: translateY(-4px);
+    }
+
+    .feature-box h3 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      color: #2563eb;
+    }
+
+    .feature-box p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #374151;
+    }
+
+    .feature-box a {
+      display: inline-block;
+      margin-top: 0.8rem;
+      font-size: 0.85rem;
+      color: #2563eb;
+      font-weight: 500;
+    }
+
     footer {
       margin-top: 3rem;
       text-align: center;
-      color: #666;
+      color: #6b7280;
       font-size: 0.85rem;
+      padding: 1rem;
     }
   </style>
 </head>
@@ -67,12 +126,30 @@
   </header>
 
   <main>
-    <h2>Chào mừng đến với hệ thống EduGround!</h2>
-    <p>Chọn một tính năng bên dưới để bắt đầu:</p>
-    <div style="margin-top: 2rem;">
-      <a href="messages.html">💬 Tin nhắn nhóm</a> |
-      <a href="reminders.html">🗓️ Nhắc nhở bài giảng</a> |
-      <a href="chatbot.html">🤖 Trợ lý AI</a>
+    <h2>Eduground Cam — Số hoá bài giảng cho mọi trường học</h2>
+    <p>Dù dạy các môn trong lớp học thể chất, học trực tuyến, hay dạy ở Trung tâm thì giờ đây việc thiết kế bài giảng thật dễ dàng và nhanh chóng.</p>
+
+    <div class="features">
+      <div class="feature-box">
+        <h3>📷 Camera + OCR</h3>
+        <p>Số hoá bài giảng chỉ với một cú bấm.</p>
+        <a href="<!-- CAMERA_OCR_LINK -->">[Thay link tại đây]</a>
+      </div>
+      <div class="feature-box">
+        <h3>📝 Tạo đề kiểm tra + Quiz</h3>
+        <p>Tạo đề kiểm tra và chấm điểm tự động.</p>
+        <a href="<!-- QUIZ_LINK -->">[Thay link tại đây]</a>
+      </div>
+      <div class="feature-box">
+        <h3>💬 Chat & Meeting</h3>
+        <p>Tạo phòng học trực tuyến và chat với học sinh.</p>
+        <a href="<!-- CHAT_MEETING_LINK -->">[Thay link tại đây]</a>
+      </div>
+      <div class="feature-box">
+        <h3>📊 Quản lý lớp</h3>
+        <p>Theo dõi tình hình học tập của học sinh.</p>
+        <a href="<!-- CLASS_MANAGEMENT_LINK -->">[Thay link tại đây]</a>
+      </div>
     </div>
   </main>
 
@@ -85,10 +162,8 @@
     const user = JSON.parse(localStorage.getItem("user") || "null");
 
     if (!user) {
-      // Nếu chưa login → quay về login.html
       window.location.href = "login.html";
     } else {
-      // Nếu đã login → cập nhật UI
       document.getElementById("user-name").textContent = user.username;
       document.getElementById("user-role").textContent = user.role;
     }
