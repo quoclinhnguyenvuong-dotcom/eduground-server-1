@@ -14,6 +14,7 @@
       color: #111827;
     }
 
+    /* === HEADER === */
     header {
       background: #3b82f6;
       color: white;
@@ -49,6 +50,55 @@
       background: #dc2626;
     }
 
+    /* === RIBBON === */
+    .ribbon {
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    .ribbon h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+    }
+
+    .ribbon p {
+      margin: 0 auto 1.5rem;
+      max-width: 700px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .ribbon-buttons a {
+      display: inline-block;
+      margin: 0 0.5rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #facc15;
+      color: #111827;
+    }
+
+    .btn-primary:hover {
+      background: #eab308;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #2563eb;
+    }
+
+    .btn-secondary:hover {
+      background: #f3f4f6;
+    }
+
+    /* === MAIN FEATURES === */
     main {
       padding: 2rem;
       text-align: center;
@@ -107,12 +157,64 @@
       font-weight: 500;
     }
 
+    /* === FOOTER === */
     footer {
       margin-top: 3rem;
+      background: #f3f4f6;
+      padding: 2rem 1rem;
       text-align: center;
-      color: #6b7280;
-      font-size: 0.85rem;
+    }
+
+    .footer-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-box {
+      background: white;
+      border-radius: 8px;
       padding: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      text-align: left;
+    }
+
+    .footer-box h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
+      color: #2563eb;
+    }
+
+    .footer-box p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: #374151;
+    }
+
+    .footer-copy {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 1rem;
+    }
+
+    /* === BOTTOM BLUE BAR === */
+    .bottom-bar {
+      background: #2563eb;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .bottom-bar a {
+      color: #facc15;
+      margin: 0 0.8rem;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .bottom-bar a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -125,9 +227,22 @@
     </div>
   </header>
 
+  <!-- Ribbon -->
+  <section class="ribbon">
+    <div class="ribbon-content">
+      <h2>Eduground Cam — Số hoá bài giảng cho mọi trường học</h2>
+      <p>Dù dạy các môn trong lớp học thể chất, học trực tuyến, hay dạy ở Trung tâm thì giờ đây việc thiết kế bài giảng thật dễ dàng và nhanh chóng.</p>
+      <div class="ribbon-buttons">
+        <a href="<!-- CHATBOT_TRY_LINK -->" class="btn-primary">🤖 Dùng thử Chatbot</a>
+        <a href="<!-- GUIDE_LINK -->" class="btn-secondary">📘 Hướng dẫn kích hoạt</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main -->
   <main>
-    <h2>Eduground Cam — Số hoá bài giảng cho mọi trường học</h2>
-    <p>Dù dạy các môn trong lớp học thể chất, học trực tuyến, hay dạy ở Trung tâm thì giờ đây việc thiết kế bài giảng thật dễ dàng và nhanh chóng.</p>
+    <h2>Chọn một tính năng bên dưới để bắt đầu</h2>
+    <p>Hệ thống hỗ trợ đầy đủ công cụ cho giảng dạy và quản lý lớp học.</p>
 
     <div class="features">
       <div class="feature-box">
@@ -153,9 +268,37 @@
     </div>
   </main>
 
+  <!-- Footer -->
   <footer>
-    © 2025 EduGround - Trường THCS Kỹ thuật số
+    <div class="footer-features">
+      <div class="footer-box">
+        <h4>📷 Camera + OCR</h4>
+        <p>Giải bài tập bằng OCR trên thầy cô và làm bài thi trên đề thi chính xác.</p>
+            <div class="footer-box">
+        <h4>📚 SGK đối chiếu & Quiz</h4>
+        <p>Tự động đối chiếu nội dung SGK & PDF và xuất bài tập & quiz.</p>
+      </div>
+      <div class="footer-box">
+        <h4>💬 Chat & Meeting</h4>
+        <p>Chatbot hỗ trợ bài tập, họp thầy cô, họp nhóm qua WebRTC/Quiz lớp học.</p>
+      </div>
+      <div class="footer-box">
+        <h4>📊 Quản lý lớp</h4>
+        <p>Điểm danh & điều dữ liệu lớp học, tích hợp sinh — phụ huynh qua QR/ lớp trưởng / HMS.</p>
+      </div>
+    </div>
+    <div class="footer-copy">
+      © 2023 Studyguard.com — Nền tảng hỗ trợ giáo dục trực tuyến toàn diện tại Việt Nam.
+    </div>
   </footer>
+
+  <!-- Bottom Blue Bar -->
+  <div class="bottom-bar">
+    <!-- Bạn có thể thêm asset/logo hoặc các liên kết tại đây -->
+    <a href="<!-- LINK_1 -->">[Link 1]</a>
+    <a href="<!-- LINK_2 -->">[Link 2]</a>
+    <a href="<!-- LINK_3 -->">[Link 3]</a>
+  </div>
 
   <script>
     // === Kiểm tra đăng nhập ===
