@@ -1,100 +1,115 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chatbot Eduground</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
-
-<!-- MathJax -->
-<script>
-window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
-
-<style>
-  body{font-family:"Noto Sans";background:#f0f6fb;margin:0}
-  .nav{background:#0078d7;color:#fff;padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
-  .nav a{color:#fff;margin:0 8px;text-decoration:none}
-  .container{max-width:900px;margin:28px auto;padding:18px;background:#fff;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
-  #chatbox{height:460px;border:1px solid #e6eef7;border-radius:8px;padding:12px;overflow:auto;background:#fcfeff}
-  .msg{padding:10px 12px;border-radius:10px;max-width:78%;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
-  .bot{background:#eef6fb;color:#0b2540}
-  .user{background:#0078d7;color:#fff;margin-left:auto;text-align:right}
-  .row{display:flex;gap:8px;margin-top:12px}
-  input[type=text]{flex:1;padding:10px;border-radius:8px;border:1px solid #cfdbe9}
-  button{background:#0078d7;color:#fff;padding:10px 12px;border:none;border-radius:8px;cursor:pointer}
-  button:hover{background:#005bb5}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatbot EduGround</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    body { font-family: "Segoe UI"; background: #f0f9ff; margin: 0; }
+    header {
+      background: #2563eb; color: white;
+      padding: 12px 20px; display: flex; justify-content: space-between;
+      align-items: center;
+    }
+    nav a { color: white; margin: 0 8px; text-decoration: none; font-weight: 500; }
+    #chat {
+      width: 70%; margin: 30px auto; background: white;
+      border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .msg { margin: 8px 0; }
+    .user { text-align: right; color: #1d4ed8; }
+    .bot { color: #374151; }
+    #input-area { display: flex; margin-top: 15px; }
+    input {
+      flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ccc;
+    }
+    button {
+      margin-left: 8px; background: #2563eb; color: white;
+      border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer;
+    }
+  </style>
 </head>
-
 <body>
-  <div class="nav">
-    <div><img src="assets/logo_index.png" style="height:36px;cursor:pointer" onclick="location.href='index.html'"></div>
+  <header>
     <div>
-      <a href="index.html">Trang chủ</a>
-      <a href="messages.html">Tin nhắn</a>
-      <a href="reminder.html">Reminder</a>
-      <a href="sodaubai.html">Sổ đầu bài</a>
-      <a href="chatbot.html">Chatbot</a>
-      <a href="Meeting.html"><b>Meeting</b>
-      <a href="login.html">Đăng Xuất</a>
-      <a href="#" onclick="logout()">Đăng xuất</a>
+      <b>Eduground Cam</b> — Chatbot
+      <nav>
+        <a href="index.html">Trang chủ</a>
+        <a href="messages.html">Tin nhắn</a>
+        <a href="reminders.html">Reminder</a>
+        <a href="chatbot.html">Chatbot</a>
+        <a href="#" onclick="logout()">Đăng xuất</a>
+      </nav>
+    </div>
+    <div id="welcome"></div>
+  </header>
+
+  <div id="chat">
+    <h3>🤖 Chatbot Eduground</h3>
+    <div id="chat-box"></div>
+    <div id="input-area">
+      <input type="text" id="msg" placeholder="Nhập câu hỏi..." />
+      <button onclick="sendMsg()">Gửi</button>
     </div>
   </div>
 
-  <div class="container">
-    <h1 id="welcome">🤖 Chatbot Eduground</h1>
-    <div id="chatbox">
-      <div class="msg bot" id="intro"></div>
-    </div>
+  <script>
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) location.href = "login.html";
+    document.getElementById("welcome").textContent =
+      `Chào mừng ${user.username}, chúc bạn một ngày vui vẻ 🥰`;
 
-    <div class="row">
-      <input id="userInput" placeholder="Nhập câu hỏi của bạn...">
-      <button id="sendBtn">Gửi</button>
-    </div>
-  </div>
+    const chatBox = document.getElementById("chat-box");
+    const OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions";
+    const API_KEY = "YOUR_OPENROUTER_API_KEY"; // ⚠️ Thay bằng key thực của mày
 
-<script>
-const USER = sessionStorage.getItem('username') || 'Khách';
-document.getElementById('welcome').innerHTML = `🤖 Chatbot Eduground`;
-document.getElementById('intro').innerHTML = `Xin chào, <b>${USER}</b> 👋<br>Mình là trợ lý học tập Eduground, có thể giúp bạn hiểu bài, viết công thức toán hoặc giải thích khái niệm.`;
+    function addMsg(text, cls) {
+      const div = document.createElement("div");
+      div.className = "msg " + cls;
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-document.getElementById('sendBtn').addEventListener('click', sendMessage);
-document.getElementById('userInput').addEventListener('keydown', e => { if(e.key==='Enter') sendMessage(); });
+    addMsg("Xin chào! Mình là trợ lý học tập Eduground. Bạn muốn hỏi gì nào?", "bot");
 
-// === CONFIG ===
-const API_URL="https://openrouter.ai/api/v1/chat/completions";
-const API_KEY="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";
-const MODEL="tngtech/deepseek-r1t2-chimera:free";async function sendMessage(){
-  const input=document.getElementById('userInput');
-  const text=input.value.trim();
-  if(!text)return;
-  const cb=document.getElementById('chatbox');
+    async function sendMsg() {
+      const input = document.getElementById("msg");
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = "";
+      addMsg(`${user.username}: ${msg}`, "user");
 
-  const u=document.createElement('div');u.className='msg user';u.textContent=text;cb.appendChild(u);
-  const wait=document.createElement('div');wait.className='msg bot';wait.id='waiting';wait.textContent='⏳ Đang chờ phản hồi...';cb.appendChild(wait);
-  cb.scrollTop=cb.scrollHeight;input.value='';
+      try {
+        const res = await fetch(OPENROUTER_API, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: [
+              { role: "system", content: "Bạn là trợ lý học tập thân thiện Eduground." },
+              { role: "user", content: msg }
+            ]
+          })
+        });
 
-  try{
-    const r=await fetch(API_URL,{method:'POST',headers:{"Authorization":`Bearer ${API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({model:MODEL,messages:[{role:"system",content:"Bạn là trợ lý học tập tiếng Việt, giúp học sinh hiểu bài, hiển thị công thức bằng LaTeX."},{role:"user",content:text}]})});
-    document.getElementById('waiting')?.remove();
-    if(!r.ok){cb.innerHTML+=`<div class="msg bot">❌ Lỗi phản hồi ${r.status}</div>`;return;}
-    const d=await r.json();let reply=d?.choices?.[0]?.message?.content||"Không có phản hồi.";
-    reply=reply.replace(/```(.*?)```/gs,'<pre>$1</pre>').replace(/\n/g,'<br>');
-    const b=document.createElement('div');b.className='msg bot';b.innerHTML=reply;cb.appendChild(b);
-    if(window.MathJax)MathJax.typesetPromise();
-  }catch(e){
-    document.getElementById('waiting')?.remove();
-    cb.innerHTML+=`<div class="msg bot">⚠️ Lỗi kết nối: ${e.message}</div>`;
-  }
-  cb.scrollTop=cb.scrollHeight;
-}
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content || "Mình chưa hiểu câu hỏi này 😅";
+        addMsg(reply, "bot");
+      } catch (e) {
+        addMsg("Lỗi kết nối API 😢", "bot");
+      }
+    }
 
-function logout(){
-  sessionStorage.clear();localStorage.clear();
-  location.href='login.html';
-}
-</script>
+    function logout() {
+      localStorage.removeItem("user");
+      location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
