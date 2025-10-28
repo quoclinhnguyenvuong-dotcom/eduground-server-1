@@ -3,18 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tin nhắn — Eduground Cam</title>
+<title>Tin nhắn — Eduground</title>
 <link rel="icon" href="assets/logo.png">
 
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
-  :root{
-    --blue:#0078d7; --bg:#f5f8fb; --panel:#ffffff; --muted:#6c757d;
-  }
+  :root{ --blue:#0078d7; --bg:#f5f8fb; --panel:#ffffff; --muted:#6c757d; }
   body{font-family:Roboto,Segoe UI,Arial;background:var(--bg);margin:0;color:#111}
-  /* ribbon */
   .nav{background:var(--blue);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
   .nav .left{display:flex;align-items:center;gap:14px}
   .nav img{height:34px;cursor:pointer}
@@ -22,7 +19,7 @@
   .nav .user{display:flex;align-items:center;gap:10px;color:#fff}
   .nav .avatar{width:36px;height:36px;border-radius:50%;background:#fff;overflow:hidden}
   .nav .avatar img{width:100%;height:100%;object-fit:cover}
-  /* layout */
+
   .layout{display:flex;height:calc(100vh - 56px)}
   .sidebar{width:320px;background:var(--panel);border-right:1px solid #e6eef7;display:flex;flex-direction:column}
   .sidebar .top{padding:12px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center}
@@ -33,7 +30,7 @@
   .chat-item:hover{background:#f6fbff}
   .avatar-sm{width:40px;height:40px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;color:#666}
   .meta{font-size:13px;color:var(--muted)}
-  /* chat window */
+
   .chat-window{flex:1;display:flex;flex-direction:column;background:#eef6fb}
   .chat-header{padding:12px;border-bottom:1px solid #e5eef8;background:var(--panel);display:flex;justify-content:space-between;align-items:center}
   .chat-body{flex:1;padding:16px;overflow:auto;background:linear-gradient(#f7fbff,#eef6fb)}
@@ -46,10 +43,9 @@
   .message.other{background:#fff;border:1px solid #dceaf8;color:#111}
   .msg-meta{font-size:11px;color:var(--muted);margin-top:6px}
   .small{font-size:12px;color:var(--muted)}
-  /* modal */
+
   #modal{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center}
   #modal .box{background:#fff;padding:18px;border-radius:10px;width:420px;max-width:95%}
-  /* responsiveness */
   @media(max-width:900px){
     .sidebar{width:100%}
     .layout{flex-direction:column;height:auto}
@@ -59,7 +55,6 @@
 </head>
 <body>
 
-  <!-- RIBBON -->
   <div class="nav">
     <div class="left">
       <img src="assets/logo_index.png" alt="logo" onclick="goHome()">
@@ -69,24 +64,21 @@
       <a href="soday.html">Sổ đầu bài</a>
       <a href="chatbot.html">Chatbot</a>
       <a href="meeting.html">Meeting</a>
-      <a href="login.html" id="logoutLink">Đăng xuất</a>
     </div>
     <div class="user">
       <div id="welcomeText" class="small">Chào mừng, <b id="userLabel">Khách</b> 👋</div>
       <div class="avatar"><img id="userAvatar" src="assets/avatar.png" alt="avatar"></div>
+      <a href="login.html" style="color:#fff;margin-left:12px" onclick="logout()">Đăng xuất</a>
     </div>
   </div>
 
-  <!-- LAYOUT -->
   <div class="layout">
     <div class="sidebar">
       <div class="top">
         <input id="searchBox" placeholder="Tìm kiếm...">
-        <button class="btn" id="createBtn">+</button>
+        <button class="btn" id="createBtn" title="Tạo nhóm / nhắn riêng">+</button>
       </div>
-      <div class="chat-list" id="chatList">
-        <!-- groups loaded here -->
-      </div>
+      <div class="chat-list" id="chatList"></div>
     </div>
 
     <div class="chat-window">
@@ -103,14 +95,13 @@
 
       <div class="chat-footer">
         <input id="msgInput" type="text" placeholder="Nhập tin nhắn... (Enter để gửi)">
-        <input id="fileInput" type="file" accept="image/*,video/*,application/pdf" style="display:none">
-        <button class="btn" id="mediaBtn">+ media</button>
+        <input id="fileInput" type="file" accept="image/*,video/*,application/pdf,audio/*" style="display:none">
+        <button class="btn" id="mediaBtn" title="Đính kèm media">+ media</button>
         <button class="btn-send" id="sendBtn">Gửi</button>
       </div>
     </div>
   </div>
 
-  <!-- modal create -->
   <div id="modal">
     <div class="box">
       <h3>Tạo nhóm / Nhắn riêng</h3>
@@ -121,69 +112,79 @@
       <div class="small">Ghi chú: với tin nhắn riêng, đặt tên trùng username người nhận.</div>
       <div style="height:12px"></div>
       <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn" id="doCreate">Tạo</button>
-        <button id="doCancel">Huỷ</button>
+        <button class="btn" id="doCreate">Tạo</button><button id="doCancel">Huỷ</button>
       </div>
       <div id="modalPreview" style="margin-top:10px"></div>
     </div>
   </div>
 
+<script src="js/auth.js"></script>
 <script>
 /* ===== CONFIG ===== */
-const API_ROOT = ''; // same origin (Render) -> endpoints under /api/*
-const USER = sessionStorage.getItem('username') || localStorage.getItem('edu_remember') || 'Khách';
-const ROLE = sessionStorage.getItem('role') || localStorage.getItem('edu_role') || 'student';
+const API_ROOT = ''; // same origin (Render)
+const me = getCurrentUser(); // auth.js MUST expose getCurrentUser() returning {username, role} or null
+const USER = me?.username || 'Khách';
+const ROLE = me?.role || 'student';
+
 document.getElementById('userLabel').textContent = USER;
 document.getElementById('welcomeText').innerHTML = `Chào mừng <b>${USER}</b>, chúc bạn một ngày vui vẻ 👋`;
 
 /* role UI */
-if (ROLE === 'devtool') {
-  document.getElementById('manageBtn').style.display = 'inline-block';
-} else {
-  document.getElementById('manageBtn').style.display = 'none';
+function applyRoleUI() {
+  if (ROLE === 'devtool' || ROLE === 'admin' || ROLE === 'teacher') {
+    document.getElementById('createBtn').style.display = 'inline-block';
+  } else {
+    document.getElementById('createBtn').style.display = 'none';
+  }
+  if (ROLE === 'devtool' || ROLE === 'admin') {
+    document.getElementById('manageBtn').style.display = 'inline-block';
+  } else {
+    document.getElementById('manageBtn').style.display = 'none';
+  }
 }
+applyRoleUI();
 
-/* ===== STATE ===== */
-let groups = {};       // id -> group obj
-let active = null;     // active group id
-let messagesCache = {}; // room -> array of messages
+/* STATE */
+let groups = {};
+let active = null;
+let messagesCache = {};
 let pendingMedia = null;
 
-/* ===== HELPERS ===== */
+/* HELPERS */
 function goHome(){ location.href='index.html' }
 function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function el(tag, cls){ const d=document.createElement(tag); if(cls) d.className=cls; return d; }
+function getAuthHeaders(){ return { 'X-USER': USER, 'X-ROLE': ROLE }; }
 
-/* ===== LOAD GROUPS ===== */
+/* LOAD GROUPS */
 async function loadGroups(){
+  // load server groups then merge local
   try{
-    const res = await fetch(API_ROOT + '/api/groups');
-    if(!res.ok) throw new Error('Không tải được groups');
-    const data = await res.json();
-    groups = data || {};
+    const res = await fetch(API_ROOT + '/api/groups', { headers: getAuthHeaders() });
+    if(res.ok){ groups = await res.json(); }
+    else { groups = {}; }
   }catch(e){
-    // fallback: try read local groups.json via static (if available)
-    try {
-      const r2 = await fetch('groups.json'); groups = await r2.json();
-    } catch(err){ groups = {}; }
+    groups = {};
   }
+  // merge local offline-created groups
+  try{
+    const local = JSON.parse(localStorage.getItem('local_groups')||'{}');
+    groups = {...local, ...groups};
+  }catch(e){}
   renderGroupList();
 }
 
-/* ===== RENDER GROUP LIST ===== */
+/* RENDER GROUP LIST */
 function renderGroupList(){
   const list = document.getElementById('chatList'); list.innerHTML='';
-  // groups object -> show in insertion order
   Object.keys(groups).forEach(id=>{
     const g = groups[id] || {};
-    const div = el('div','chat-item');
-    div.onclick = ()=> openChat(id,g);
-    const av = el('div','avatar-sm'); av.textContent = g.name ? g.name[0] : 'G';
+    const div = el('div','chat-item'); div.onclick = ()=> openChat(id,g);
+    const av = el('div','avatar-sm'); av.textContent = (g.name || id)[0] || 'G';
     const cont = el('div');
     cont.innerHTML = `<div style="font-weight:600;color:${ (g.name? 'var(--blue)' : '#000') }">${escapeHtml(g.name || id)}</div>
       <div class="meta">${(g.members||[]).slice(0,4).map(escapeHtml).join(', ')}</div>`;
-    div.appendChild(av); div.appendChild(cont);
-    list.appendChild(div);
+    div.appendChild(av); div.appendChild(cont); list.appendChild(div);
   });
 
   // local DMs
@@ -194,85 +195,74 @@ function renderGroupList(){
     const div = el('div','chat-item'); div.onclick = ()=> openChat(id, { name: dm, members:[dm, USER] });
     const av = el('div','avatar-sm'); av.textContent = dm[0]||'U';
     const cont = el('div'); cont.innerHTML = `<div style="font-weight:600">${escapeHtml(dm)}</div><div class="meta">Tin nhắn riêng</div>`;
-    div.appendChild(av); div.appendChild(cont);
-    list.appendChild(div);
+    div.appendChild(av); div.appendChild(cont); list.appendChild(div);
   });
 }
 
-/* ===== OPEN CHAT ===== */
+/* OPEN CHAT */
 async function openChat(id, meta){
   active = id;
   document.getElementById('chatTitle').textContent = meta.name || id;
   document.getElementById('chatBody').innerHTML = '';
-  // show manage button logic
-  document.getElementById('manageBtn').style.display = (ROLE==='devtool' && !id.startsWith('dm:')) ? 'inline-block' : 'none';
+  document.getElementById('manageBtn').style.display = (ROLE==='devtool' || ROLE==='admin') ? 'inline-block' : 'none';
 
   if(id.startsWith('dm:')){
-    // local DM stored in localStorage
     const peer = id.split(':')[1];
     let dms = JSON.parse(localStorage.getItem('local_dms')||'[]');
-    if(!dms.includes(peer)){ dms.push(peer); localStorage.setItem('local_dms', JSON.stringify(dms)); loadGroups(); }
+    if(!dms.includes(peer)){ dms.push(peer); localStorage.setItem('local_dms', JSON.stringify(dms)); renderGroupList(); }
     const key = 'dm_'+[peer,USER].sort().join('_');
     const arr = JSON.parse(localStorage.getItem(key)||'[]');
-    arr.forEach(a=> appendMessageToUI(a));
+    if(!arr || arr.length===0){
+      document.getElementById('chatBody').innerHTML = '<div class="empty-hint">Chưa có tin nhắn riêng.</div>';
+    } else {
+      arr.forEach(a=> appendMessageToUI(a));
+    }
   } else {
-    // room: fetch messages global
     await loadMessagesForRoom(id);
   }
 }
 
-/* ===== LOAD MESSAGES FOR ROOM ===== */
+/* LOAD MESSAGES */
 async function loadMessagesForRoom(room){
   try{
-    const res = await fetch(API_ROOT + '/api/messages');
+    const res = await fetch(API_ROOT + '/api/messages', { headers: getAuthHeaders() });
     if(!res.ok) throw new Error('no msgs');
     const data = await res.json();
-    // server returns { room1:[...], room2: [...] } (decompressed by server)
     const arr = data[room] || [];
     messagesCache[room] = arr;
     document.getElementById('chatBody').innerHTML = '';
-    if(arr.length===0){
-      document.getElementById('chatBody').innerHTML = '<div class="empty-hint">Không có tin nhắn trong đoạn chat này.</div>';
-    } else {
-      arr.forEach(m => appendMessageToUI(m));
-    }
+    if(!arr || arr.length===0) document.getElementById('chatBody').innerHTML = '<div class="empty-hint">Không có tin nhắn trong đoạn chat này.</div>';
+    else arr.forEach(m => appendMessageToUI(m));
   }catch(e){
-    // fallback: local copy
     const local = JSON.parse(localStorage.getItem('local_chat_'+room)||'[]');
     document.getElementById('chatBody').innerHTML = '';
-    (local || []).forEach(m => appendMessageToUI(m));
+    if(!local || local.length===0) document.getElementById('chatBody').innerHTML = '<div class="empty-hint">Không có tin nhắn (off-line).</div>';
+    else local.forEach(m => appendMessageToUI(m));
   }
 }
 
-/* ===== APPEND MESSAGE UI ===== */
+/* APPEND MESSAGE UI */
 function appendMessageToUI(m){
   const body = document.getElementById('chatBody');
   const wrapper = el('div');
   const isMe = (m.from === USER);
   const msg = el('div', 'message ' + (isMe? 'me':'other'));
   if(m.type === 'media'){
-    // per user request, show "comming soon" for media preview OR show image if small
     if(m.media && m.media.url){
-      // show placeholder text and link
-      const a = document.createElement('a');
-      a.href = m.media.url; a.target='_blank'; a.textContent = 'comming soon — mở file';
+      const a = document.createElement('a'); a.href = m.media.url; a.target='_blank'; a.textContent = 'comming soon — mở file';
       msg.appendChild(a);
-    } else {
-      msg.textContent = 'comming soon';
-    }
+    } else { msg.textContent = 'comming soon'; }
   } else {
     msg.innerHTML = escapeHtml(m.text || '');
   }
   const meta = el('div','msg-meta');
-  const dt = new Date((m.time||Date.now())*1000);
+  const dt = new Date((m.time||Math.floor(Date.now()/1000))*1000);
   meta.textContent = `${dt.toLocaleString()} — ${m.from || 'khách'}`;
   msg.appendChild(meta);
-  wrapper.appendChild(msg);
-  body.appendChild(wrapper);
-  body.scrollTop = body.scrollHeight;
+  wrapper.appendChild(msg); body.appendChild(wrapper); body.scrollTop = body.scrollHeight;
 }
 
-/* ===== SEND MESSAGE ===== */
+/* SEND MESSAGE */
 document.getElementById('sendBtn').addEventListener('click', sendMessage);
 document.getElementById('msgInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendMessage(); });
 
@@ -281,7 +271,6 @@ async function sendMessage(){
   if(!active){ alert('Chưa chọn đoạn chat'); return; }
   if(!text && !pendingMedia) return;
 
-  // build payload
   const payload = {
     chat_id: active,
     from: USER,
@@ -291,134 +280,90 @@ async function sendMessage(){
   };
 
   if(pendingMedia){
-    // we have a local prepared upload result
-    payload.media = pendingMedia; // { url, name, mediaType }
+    payload.media = pendingMedia;
     pendingMedia = null;
-    document.getElementById('modalPreview').innerHTML='';
+    const mp = document.getElementById('modalPreview'); if(mp) mp.innerHTML = '';
   }
 
-  // show waiting indicator
-  const wait = el('div','message other'); wait.textContent = '⏳ Đang chờ phản hồi từ máy chủ...'; document.getElementById('chatBody').appendChild(wait);
-  document.getElementById('chatBody').scrollTop = document.getElementById('chatBody').scrollHeight;
+  // optimistic UI
+  appendMessageToUI(payload);
 
   try{
-    // if DM locally, store in localStorage then also try to push to server room
     if(active.startsWith('dm:')){
       const peer = active.split(':')[1];
       const key = 'dm_'+[peer,USER].sort().join('_');
-      const arr = JSON.parse(localStorage.getItem(key)||'[]');
-      arr.push(payload);
-      localStorage.setItem(key, JSON.stringify(arr));
-      // also attempt to push to /api/messages under a dm room name for sync if server exists
+      const arr = JSON.parse(localStorage.getItem(key)||'[]'); arr.push(payload); localStorage.setItem(key, JSON.stringify(arr));
       const roomName = 'dmroom_' + [peer,USER].sort().join('_');
-      await fetch(API_ROOT + '/api/messages', {
-        method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...payload, chat_id: roomName})
-      }).catch(()=>{ /* ignore */ });
-      // update UI
-      appendMessageToUI(payload);
+      await fetch(API_ROOT + '/api/messages', { method:'POST', headers: {...getAuthHeaders(), 'Content-Type':'application/json'}, body: JSON.stringify({...payload, chat_id: roomName}) }).catch(()=>{});
     } else {
-      const res = await fetch(API_ROOT + '/api/messages', {
-        method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
-      });
+      const res = await fetch(API_ROOT + '/api/messages', { method:'POST', headers: {...getAuthHeaders(), 'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       if(!res.ok) throw new Error('send fail');
-      appendMessageToUI(payload);
-      // optimistic: try refresh messages for that room
+      // refresh
       await loadMessagesForRoom(active);
     }
   }catch(err){
-    alert('Gửi thất bại: ' + err.message);
+    alert('Gửi thất bại: ' + (err.message||err));
   } finally {
-    // remove waiting node
-    const body = document.getElementById('chatBody');
-    const nodes = Array.from(body.querySelectorAll('.message'));
-    nodes.forEach(n=>{ if(n.textContent && n.textContent.includes('Đang chờ phản hồi')) n.remove(); });
     document.getElementById('msgInput').value = '';
   }
 }
 
-/* ===== MEDIA UPLOAD ===== */
+/* MEDIA UPLOAD */
 document.getElementById('mediaBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change', async (e)=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  if(f.size > 8*1024*1024){ if(!confirm('File lớn hơn 8MB — tiếp tục?')) return; }
-  // show preview in modalPreview area
-  const pr = document.getElementById('modalPreview');
-  pr.innerHTML = `<div class="small">Preview (chưa gửi): ${escapeHtml(f.name)}</div>`;
-  // upload to server
-  const form = new FormData(); form.append('file', f);
+  const f = e.target.files[0]; if(!f) return;
+  if(f.size > 16*1024*1024){ if(!confirm('File lớn hơn 16MB — tiếp tục?')) return; }
   try{
-    const r = await fetch(API_ROOT + '/api/upload', { method:'POST', body: form });
-    if(!r.ok) throw new Error('upload fail');
+    const fd = new FormData(); fd.append('file', f);
+    const r = await fetch(API_ROOT + '/api/upload', { method:'POST', headers: getAuthHeaders(), body: fd });
+    if(!r.ok) { const j = await r.json().catch(()=>({})); throw new Error(j.error || 'upload fail'); }
     const j = await r.json();
-    if(j.ok){
-      pendingMedia = { url: j.url, name: j.name, mediaType: f.type };
-      pr.innerHTML += `<div class="small">Upload thành công — nhấn Gửi để gửi</div>`;
-    } else {
-      pr.innerHTML += `<div class="small">Upload thất bại: ${escapeHtml(j.error||'unknown')}</div>`;
-    }
-  }catch(err){
-    pr.innerHTML += `<div class="small">Lỗi upload: ${escapeHtml(err.message)}</div>`;
-  }
+    pendingMedia = { url: j.url, name: j.name, mediaType: f.type };
+    const pr = document.getElementById('modalPreview'); if(pr) pr.innerHTML = `<div class="small">Đính kèm: ${escapeHtml(j.name)}</div>`;
+    alert('Tải lên xong, tin nhắn sẽ kèm file khi gửi.');
+  }catch(err){ alert('Upload thất bại: ' + (err.message||err)); }
 });
 
-/* ===== CREATE GROUP ===== */
-document.getElementById('createBtn').addEventListener('click', ()=> { document.getElementById('modal').style.display='flex'; });
-document.getElementById('doCancel').addEventListener('click', ()=> { document.getElementById('modal').style.display='none'; });
+/* CREATE GROUP */
+const modal = document.getElementById('modal');
+document.getElementById('createBtn').addEventListener('click', ()=> {
+  if(!(ROLE === 'teacher' || ROLE === 'admin' || ROLE === 'devtool')) { alert('Chỉ giáo viên/adm mới được tạo nhóm'); return; }
+  modal.style.display = 'flex';
+});
+document.getElementById('doCancel').addEventListener('click', ()=> { modal.style.display='none'; });
 document.getElementById('doCreate').addEventListener('click', async ()=>{
   const name = document.getElementById('gName').value.trim();
-  const membersText = document.getElementById('gMembers').value.trim();
-  const members = membersText ? membersText.split(',').map(s=>s.trim()).filter(Boolean) : [];
-  if(!name){ alert('Nhập tên nhóm'); return; }
-  const obj = { id: 'grp_' + name.replace(/\s+/g,'_') + '_' + Math.random().toString(36).slice(2,7), name, members };
+  const membersRaw = document.getElementById('gMembers').value.trim();
+  if(!name || !membersRaw){ alert('Cần tên nhóm và thành viên'); return; }
+  const members = membersRaw.split(',').map(s=>s.trim()).filter(Boolean);
+  const gid = 'g_' + Math.random().toString(36).slice(2,9);
+  const gobj = { id: gid, name: name, members: members };
+
   try{
-    const r = await fetch(API_ROOT + '/api/groups', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(obj)
-    });
-    if(!r.ok) throw new Error('create fail');
-    const j = await r.json();
-    if(j.ok){
-      // update local view
-      groups[j.id || obj.id] = obj;
-      document.getElementById('modal').style.display='none';
-      document.getElementById('gName').value=''; document.getElementById('gMembers').value='';
-      renderGroupList();
-      setTimeout(()=> openChat(j.id || obj.id, obj), 300);
-    } else {
-      throw new Error(j.error || 'create fail');
-    }
-  }catch(err){
-    // fallback local save
-    const local = JSON.parse(localStorage.getItem('local_groups')||'[]');
-    local.push(obj); localStorage.setItem('local_groups', JSON.stringify(local));
-    groups[obj.id] = obj; renderGroupList();
-    document.getElementById('modal').style.display='none';
-    alert('Peer offline — nhóm được lưu cục bộ');
-  }
+    const res = await fetch(API_ROOT + '/api/groups', { method:'POST', headers: {...getAuthHeaders(), 'Content-Type':'application/json'}, body: JSON.stringify(gobj) });
+    if(res.ok){ const j = await res.json(); gobj.id = j.id || gid; }
+  }catch(e){ console.warn('Server save failed, fallback local'); }
+
+  // save local and render
+  try{ const local = JSON.parse(localStorage.getItem('local_groups')||'{}'); local[gobj.id]=gobj; localStorage.setItem('local_groups', JSON.stringify(local)); }catch(e){}
+  groups[gobj.id] = gobj;
+  renderGroupList();
+  modal.style.display='none';
+  document.getElementById('gName').value=''; document.getElementById('gMembers').value='';
+  openChat(gobj.id, gobj);
+  alert('✅ Tạo nhóm thành công!');
 });
 
-/* ===== MANAGE GROUP (devtool only) ===== */
-document.getElementById('manageBtn').addEventListener('click', ()=>{
-  if(!active || active.startsWith('dm:')) return;
-  const g = groups[active];
-  if(!g) return alert('Không tìm thấy nhóm');
-  const cmd = prompt('Lệnh (members / kick:username / addadmin:username / removeadmin:username):');
-  if(!cmd) return;
-  const [carg, target] = cmd.split(':').map(x=>x && x.trim());
-  if(carg === 'members') return alert('Thành viên: ' + (g.members||[]).join(', '));
-  if(carg === 'kick'){ g.members = (g.members||[]).filter(x=>x !== target); updateGroup(active,g); return; }
-  if(carg === 'addadmin'){ g.admins = g.admins || []; if(!g.admins.includes(target)) g.admins.push(target); updateGroup(active,g); return; }
-  if(carg === 'removeadmin'){ g.admins = (g.admins||[]).filter(x=>x!==target); updateGroup(active,g); return; }
-  alert('Lệnh không hợp lệ');
-});
+/* UPDATE GROUP (manage) */
 async function updateGroup(id, g){
   try{
-    const r = await fetch(API_ROOT + '/api/groups', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...g, id})});
-    if(r.ok){ groups[id]=g; renderGroupList(); alert('Cập nhật xong'); }
-  }catch(e){ alert('Cập nhật thất bại'); }
+    const r = await fetch(API_ROOT + '/api/groups', { method:'POST', headers:{...getAuthHeaders(), 'Content-Type':'application/json'}, body: JSON.stringify({...g, id})});
+    if(r.ok){ groups[id]=g; renderGroupList(); alert('Cập nhật xong'); return true; }
+  }catch(e){}
+  return false;
 }
 
-/* ===== SEARCH ===== */
+/* SEARCH */
 document.getElementById('searchBox').addEventListener('input', function(){
   const q = this.value.trim().toLowerCase();
   const listItems = Array.from(document.querySelectorAll('#chatList .chat-item'));
@@ -428,16 +373,15 @@ document.getElementById('searchBox').addEventListener('input', function(){
   });
 });
 
-/* ===== INITIALIZE ===== */
+/* POLLING */
+setInterval(()=>{ if(active && !active.startsWith('dm:')) loadMessagesForRoom(active); }, 4000);
+
+/* INIT */
+if(typeof ensureAuth === 'function'){ try{ ensureAuth(); }catch(e){ console.warn('ensureAuth failed', e); } }
 loadGroups();
 
-/* optional: poll messages for active every 4s to simulate realtime */
-setInterval(()=>{ if(active && !active.startsWith('dm:')) loadMessagesForRoom(active); }, 4000);
-  <script src="js/auth.js"></script>
-<script>
-  ensureAuth(); // kiểm tra trạng thái login mỗi khi vào trang
-</script>
-
+/* LOGOUT */
+function logout(){ sessionStorage.clear(); localStorage.removeItem('edu_remember'); localStorage.removeItem('edu_role'); location.href='login.html'; }
 </script>
 </body>
 </html>
