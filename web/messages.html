@@ -1,443 +1,125 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tin nhắn — Eduground Cam</title>
-<link rel="icon" href="assets/logo.png">
-
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;600&display=swap" rel="stylesheet">
-
-<style>
-  :root{
-    --blue:#0078d7; --bg:#f5f8fb; --panel:#ffffff; --muted:#6c757d;
-  }
-  body{font-family:Roboto,Segoe UI,Arial;background:var(--bg);margin:0;color:#111}
-  /* ribbon */
-  .nav{background:var(--blue);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
-  .nav .left{display:flex;align-items:center;gap:14px}
-  .nav img{height:34px;cursor:pointer}
-  .nav a{color:#fff;margin:0 8px;text-decoration:none;font-weight:600}
-  .nav .user{display:flex;align-items:center;gap:10px;color:#fff}
-  .nav .avatar{width:36px;height:36px;border-radius:50%;background:#fff;overflow:hidden}
-  .nav .avatar img{width:100%;height:100%;object-fit:cover}
-  /* layout */
-  .layout{display:flex;height:calc(100vh - 56px)}
-  .sidebar{width:320px;background:var(--panel);border-right:1px solid #e6eef7;display:flex;flex-direction:column}
-  .sidebar .top{padding:12px;border-bottom:1px solid #eee;display:flex;gap:8px;align-items:center}
-  .sidebar input{flex:1;padding:8px;border-radius:6px;border:1px solid #cfdbe9}
-  .sidebar .btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:8px 10px;cursor:pointer}
-  .chat-list{overflow:auto;flex:1;padding:8px}
-  .chat-item{padding:10px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #f3f7fb;cursor:pointer}
-  .chat-item:hover{background:#f6fbff}
-  .avatar-sm{width:40px;height:40px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;color:#666}
-  .meta{font-size:13px;color:var(--muted)}
-  /* chat window */
-  .chat-window{flex:1;display:flex;flex-direction:column;background:#eef6fb}
-  .chat-header{padding:12px;border-bottom:1px solid #e5eef8;background:var(--panel);display:flex;justify-content:space-between;align-items:center}
-  .chat-body{flex:1;padding:16px;overflow:auto;background:linear-gradient(#f7fbff,#eef6fb)}
-  .empty-hint{color:var(--muted);text-align:center;margin-top:80px}
-  .chat-footer{padding:12px;border-top:1px solid #e6eef7;background:var(--panel);display:flex;gap:8px;align-items:center}
-  .chat-footer input[type="text"]{flex:1;padding:10px;border-radius:20px;border:1px solid #cfdbe9}
-  .chat-footer .btn-send{background:var(--blue);color:#fff;padding:8px 14px;border:none;border-radius:12px;cursor:pointer}
-  .message{max-width:70%;padding:10px 14px;border-radius:12px;margin:8px 0;word-wrap:break-word;display:inline-block}
-  .message.me{background:var(--blue);color:#fff;margin-left:auto}
-  .message.other{background:#fff;border:1px solid #dceaf8;color:#111}
-  .msg-meta{font-size:11px;color:var(--muted);margin-top:6px}
-  .small{font-size:12px;color:var(--muted)}
-  /* modal */
-  #modal{display:none;position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.35);align-items:center;justify-content:center}
-  #modal .box{background:#fff;padding:18px;border-radius:10px;width:420px;max-width:95%}
-  /* responsiveness */
-  @media(max-width:900px){
-    .sidebar{width:100%}
-    .layout{flex-direction:column;height:auto}
-    .chat-window{height:60vh}
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tin nhắn - EduGround</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    body { margin: 0; font-family: "Segoe UI", sans-serif; background: #f3f4f6; }
+    header {
+      background: #2563eb; color: white;
+      padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+    }
+    nav a {
+      color: white; margin: 0 8px; text-decoration: none; font-weight: 500;
+    }
+    #container { display: flex; height: calc(100vh - 60px); }
+    #chat-list {
+      width: 250px; background: #fff; border-right: 1px solid #ddd;
+      overflow-y: auto; padding: 10px;
+    }
+    #chat-area { flex: 1; background: #f9fafb; display: flex; flex-direction: column; }
+    #chat-box {
+      flex: 1; padding: 16px; overflow-y: auto;
+    }
+    #input-area {
+      display: flex; padding: 10px; background: white; border-top: 1px solid #ddd;
+    }
+    input {
+      flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px;
+    }
+    button {
+      background: #2563eb; color: white; border: none;
+      margin-left: 8px; padding: 8px 12px; border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-
-  <!-- RIBBON -->
-  <div class="nav">
-    <div class="left">
-      <img src="assets/logo_index.png" alt="logo" onclick="goHome()">
-      <a href="index.html">Trang chủ</a>
-      <a href="messages.html">Tin nhắn</a>
-      <a href="reminders.html">Reminder</a>
-      <a href="soday.html">Sổ đầu bài</a>
-      <a href="chatbot.html">Chatbot</a>
-      <a href="meeting.html">Meeting</a>
-      <a href="login.html" id="logoutLink">Đăng xuất</a>
+  <header>
+    <div>
+      <b>Eduground Cam</b> — Tin nhắn
+      <nav>
+        <a href="index.html">Trang chủ</a>
+        <a href="messages.html">Tin nhắn</a>
+        <a href="reminders.html">Reminder</a>
+        <a href="chatbot.html">Chatbot</a>
+        <a href="#" onclick="logout()">Đăng xuất</a>
+      </nav>
     </div>
-    <div class="user">
-      <div id="welcomeText" class="small">Chào mừng, <b id="userLabel">Khách</b> 👋</div>
-      <div class="avatar"><img id="userAvatar" src="assets/avatar.png" alt="avatar"></div>
-    </div>
-  </div>
+    <div id="welcome"></div>
+  </header>
 
-  <!-- LAYOUT -->
-  <div class="layout">
-    <div class="sidebar">
-      <div class="top">
-        <input id="searchBox" placeholder="Tìm kiếm...">
-        <button class="btn" id="createBtn">+</button>
-      </div>
-      <div class="chat-list" id="chatList">
-        <!-- groups loaded here -->
-      </div>
-    </div>
-
-    <div class="chat-window">
-      <div class="chat-header">
-        <div id="chatTitle">Chưa chọn đoạn chat</div>
-        <div>
-          <button class="btn" id="manageBtn" style="display:none">Quản lý</button>
-        </div>
-      </div>
-
-      <div class="chat-body" id="chatBody">
-        <div class="empty-hint">Chọn đoạn chat để xem tin nhắn</div>
-      </div>
-
-      <div class="chat-footer">
-        <input id="msgInput" type="text" placeholder="Nhập tin nhắn... (Enter để gửi)">
-        <input id="fileInput" type="file" accept="image/*,video/*,application/pdf" style="display:none">
-        <button class="btn" id="mediaBtn">+ media</button>
-        <button class="btn-send" id="sendBtn">Gửi</button>
+  <div id="container">
+    <div id="chat-list"></div>
+    <div id="chat-area">
+      <div id="chat-box">Chưa chọn đoạn chat.</div>
+      <div id="input-area">
+        <input type="text" id="msg" placeholder="Nhập tin nhắn...">
+        <button onclick="sendMsg()">Gửi</button>
       </div>
     </div>
   </div>
 
-  <!-- modal create -->
-  <div id="modal">
-    <div class="box">
-      <h3>Tạo nhóm / Nhắn riêng</h3>
-      <input id="gName" placeholder="Tên nhóm / tên riêng" style="width:100%;padding:8px;margin-top:8px;border:1px solid #ddd;border-radius:6px">
-      <div style="height:8px"></div>
-      <input id="gMembers" placeholder="Thành viên (phân tách bằng ,)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px">
-      <div style="height:12px"></div>
-      <div class="small">Ghi chú: với tin nhắn riêng, đặt tên trùng username người nhận.</div>
-      <div style="height:12px"></div>
-      <div style="display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn" id="doCreate">Tạo</button>
-        <button id="doCancel">Huỷ</button>
-      </div>
-      <div id="modalPreview" style="margin-top:10px"></div>
-    </div>
-  </div>
+  <script>
+    const API_BASE = "https://eduground-server-1-3.onrender.com/api";
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (!user) location.href = "login.html";
+    document.getElementById("welcome").textContent =
+      `Chào mừng ${user.username} (${user.role}) 👋`;
 
-<script>
-/* ===== CONFIG ===== */
-const API_ROOT = ''; // same origin (Render) -> endpoints under /api/*
-const USER = sessionStorage.getItem('username') || localStorage.getItem('edu_remember') || 'Khách';
-const ROLE = sessionStorage.getItem('role') || localStorage.getItem('edu_role') || 'student';
-document.getElementById('userLabel').textContent = USER;
-document.getElementById('welcomeText').innerHTML = `Chào mừng <b>${USER}</b>, chúc bạn một ngày vui vẻ 👋`;
+    const chatList = document.getElementById("chat-list");
+    const chatBox = document.getElementById("chat-box");
+    let currentGroup = null;
 
-/* role UI */
-if (ROLE === 'devtool') {
-  document.getElementById('manageBtn').style.display = 'inline-block';
-} else {
-  document.getElementById('manageBtn').style.display = 'none';
-}
-
-/* ===== STATE ===== */
-let groups = {};       // id -> group obj
-let active = null;     // active group id
-let messagesCache = {}; // room -> array of messages
-let pendingMedia = null;
-
-/* ===== HELPERS ===== */
-function goHome(){ location.href='index.html' }
-function escapeHtml(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function el(tag, cls){ const d=document.createElement(tag); if(cls) d.className=cls; return d; }
-
-/* ===== LOAD GROUPS ===== */
-async function loadGroups(){
-  try{
-    const res = await fetch(API_ROOT + '/api/groups');
-    if(!res.ok) throw new Error('Không tải được groups');
-    const data = await res.json();
-    groups = data || {};
-  }catch(e){
-    // fallback: try read local groups.json via static (if available)
-    try {
-      const r2 = await fetch('groups.json'); groups = await r2.json();
-    } catch(err){ groups = {}; }
-  }
-  renderGroupList();
-}
-
-/* ===== RENDER GROUP LIST ===== */
-function renderGroupList(){
-  const list = document.getElementById('chatList'); list.innerHTML='';
-  // groups object -> show in insertion order
-  Object.keys(groups).forEach(id=>{
-    const g = groups[id] || {};
-    const div = el('div','chat-item');
-    div.onclick = ()=> openChat(id,g);
-    const av = el('div','avatar-sm'); av.textContent = g.name ? g.name[0] : 'G';
-    const cont = el('div');
-    cont.innerHTML = `<div style="font-weight:600;color:${ (g.name? 'var(--blue)' : '#000') }">${escapeHtml(g.name || id)}</div>
-      <div class="meta">${(g.members||[]).slice(0,4).map(escapeHtml).join(', ')}</div>`;
-    div.appendChild(av); div.appendChild(cont);
-    list.appendChild(div);
-  });
-
-  // local DMs
-  const dms = JSON.parse(localStorage.getItem('local_dms')||'[]');
-  dms.forEach(dm=>{
-    const id = 'dm:'+dm;
-    if(Object.keys(groups).includes(id)) return;
-    const div = el('div','chat-item'); div.onclick = ()=> openChat(id, { name: dm, members:[dm, USER] });
-    const av = el('div','avatar-sm'); av.textContent = dm[0]||'U';
-    const cont = el('div'); cont.innerHTML = `<div style="font-weight:600">${escapeHtml(dm)}</div><div class="meta">Tin nhắn riêng</div>`;
-    div.appendChild(av); div.appendChild(cont);
-    list.appendChild(div);
-  });
-}
-
-/* ===== OPEN CHAT ===== */
-async function openChat(id, meta){
-  active = id;
-  document.getElementById('chatTitle').textContent = meta.name || id;
-  document.getElementById('chatBody').innerHTML = '';
-  // show manage button logic
-  document.getElementById('manageBtn').style.display = (ROLE==='devtool' && !id.startsWith('dm:')) ? 'inline-block' : 'none';
-
-  if(id.startsWith('dm:')){
-    // local DM stored in localStorage
-    const peer = id.split(':')[1];
-    let dms = JSON.parse(localStorage.getItem('local_dms')||'[]');
-    if(!dms.includes(peer)){ dms.push(peer); localStorage.setItem('local_dms', JSON.stringify(dms)); loadGroups(); }
-    const key = 'dm_'+[peer,USER].sort().join('_');
-    const arr = JSON.parse(localStorage.getItem(key)||'[]');
-    arr.forEach(a=> appendMessageToUI(a));
-  } else {
-    // room: fetch messages global
-    await loadMessagesForRoom(id);
-  }
-}
-
-/* ===== LOAD MESSAGES FOR ROOM ===== */
-async function loadMessagesForRoom(room){
-  try{
-    const res = await fetch(API_ROOT + '/api/messages');
-    if(!res.ok) throw new Error('no msgs');
-    const data = await res.json();
-    // server returns { room1:[...], room2: [...] } (decompressed by server)
-    const arr = data[room] || [];
-    messagesCache[room] = arr;
-    document.getElementById('chatBody').innerHTML = '';
-    if(arr.length===0){
-      document.getElementById('chatBody').innerHTML = '<div class="empty-hint">Không có tin nhắn trong đoạn chat này.</div>';
-    } else {
-      arr.forEach(m => appendMessageToUI(m));
-    }
-  }catch(e){
-    // fallback: local copy
-    const local = JSON.parse(localStorage.getItem('local_chat_'+room)||'[]');
-    document.getElementById('chatBody').innerHTML = '';
-    (local || []).forEach(m => appendMessageToUI(m));
-  }
-}
-
-/* ===== APPEND MESSAGE UI ===== */
-function appendMessageToUI(m){
-  const body = document.getElementById('chatBody');
-  const wrapper = el('div');
-  const isMe = (m.from === USER);
-  const msg = el('div', 'message ' + (isMe? 'me':'other'));
-  if(m.type === 'media'){
-    // per user request, show "comming soon" for media preview OR show image if small
-    if(m.media && m.media.url){
-      // show placeholder text and link
-      const a = document.createElement('a');
-      a.href = m.media.url; a.target='_blank'; a.textContent = 'comming soon — mở file';
-      msg.appendChild(a);
-    } else {
-      msg.textContent = 'comming soon';
-    }
-  } else {
-    msg.innerHTML = escapeHtml(m.text || '');
-  }
-  const meta = el('div','msg-meta');
-  const dt = new Date((m.time||Date.now())*1000);
-  meta.textContent = `${dt.toLocaleString()} — ${m.from || 'khách'}`;
-  msg.appendChild(meta);
-  wrapper.appendChild(msg);
-  body.appendChild(wrapper);
-  body.scrollTop = body.scrollHeight;
-}
-
-/* ===== SEND MESSAGE ===== */
-document.getElementById('sendBtn').addEventListener('click', sendMessage);
-document.getElementById('msgInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendMessage(); });
-
-async function sendMessage(){
-  const text = document.getElementById('msgInput').value.trim();
-  if(!active){ alert('Chưa chọn đoạn chat'); return; }
-  if(!text && !pendingMedia) return;
-
-  // build payload
-  const payload = {
-    chat_id: active,
-    from: USER,
-    text: text,
-    type: pendingMedia? 'media' : 'text',
-    time: Math.floor(Date.now()/1000)
-  };
-
-  if(pendingMedia){
-    // we have a local prepared upload result
-    payload.media = pendingMedia; // { url, name, mediaType }
-    pendingMedia = null;
-    document.getElementById('modalPreview').innerHTML='';
-  }
-
-  // show waiting indicator
-  const wait = el('div','message other'); wait.textContent = '⏳ Đang chờ phản hồi từ máy chủ...'; document.getElementById('chatBody').appendChild(wait);
-  document.getElementById('chatBody').scrollTop = document.getElementById('chatBody').scrollHeight;
-
-  try{
-    // if DM locally, store in localStorage then also try to push to server room
-    if(active.startsWith('dm:')){
-      const peer = active.split(':')[1];
-      const key = 'dm_'+[peer,USER].sort().join('_');
-      const arr = JSON.parse(localStorage.getItem(key)||'[]');
-      arr.push(payload);
-      localStorage.setItem(key, JSON.stringify(arr));
-      // also attempt to push to /api/messages under a dm room name for sync if server exists
-      const roomName = 'dmroom_' + [peer,USER].sort().join('_');
-      await fetch(API_ROOT + '/api/messages', {
-        method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...payload, chat_id: roomName})
-      }).catch(()=>{ /* ignore */ });
-      // update UI
-      appendMessageToUI(payload);
-    } else {
-      const res = await fetch(API_ROOT + '/api/messages', {
-        method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    async function loadGroups() {
+      const res = await fetch(`${API_BASE}/groups?user=${encodeURIComponent(user.username)}`);
+      const groups = await res.json();
+      chatList.innerHTML = "";
+      groups.forEach(g => {
+        const div = document.createElement("div");
+        div.textContent = g.name;
+        div.style.padding = "10px";
+        div.style.cursor = "pointer";
+        div.onclick = () => openChat(g);
+        chatList.appendChild(div);
       });
-      if(!res.ok) throw new Error('send fail');
-      appendMessageToUI(payload);
-      // optimistic: try refresh messages for that room
-      await loadMessagesForRoom(active);
     }
-  }catch(err){
-    alert('Gửi thất bại: ' + err.message);
-  } finally {
-    // remove waiting node
-    const body = document.getElementById('chatBody');
-    const nodes = Array.from(body.querySelectorAll('.message'));
-    nodes.forEach(n=>{ if(n.textContent && n.textContent.includes('Đang chờ phản hồi')) n.remove(); });
-    document.getElementById('msgInput').value = '';
-  }
-}
 
-/* ===== MEDIA UPLOAD ===== */
-document.getElementById('mediaBtn').addEventListener('click', ()=> document.getElementById('fileInput').click());
-document.getElementById('fileInput').addEventListener('change', async (e)=>{
-  const f = e.target.files[0];
-  if(!f) return;
-  if(f.size > 8*1024*1024){ if(!confirm('File lớn hơn 8MB — tiếp tục?')) return; }
-  // show preview in modalPreview area
-  const pr = document.getElementById('modalPreview');
-  pr.innerHTML = `<div class="small">Preview (chưa gửi): ${escapeHtml(f.name)}</div>`;
-  // upload to server
-  const form = new FormData(); form.append('file', f);
-  try{
-    const r = await fetch(API_ROOT + '/api/upload', { method:'POST', body: form });
-    if(!r.ok) throw new Error('upload fail');
-    const j = await r.json();
-    if(j.ok){
-      pendingMedia = { url: j.url, name: j.name, mediaType: f.type };
-      pr.innerHTML += `<div class="small">Upload thành công — nhấn Gửi để gửi</div>`;
-    } else {
-      pr.innerHTML += `<div class="small">Upload thất bại: ${escapeHtml(j.error||'unknown')}</div>`;
+    async function openChat(group) {
+      currentGroup = group;
+      chatBox.innerHTML = `<h3>${group.name}</h3>`;
+      const res = await fetch(`${API_BASE}/messages?group_id=${group.id}`);
+      const msgs = await res.json();
+      msgs.forEach(m => {
+        const p = document.createElement("p");
+        p.textContent = `${m.sender}: ${m.text}`;
+        chatBox.appendChild(p);
+      });
     }
-  }catch(err){
-    pr.innerHTML += `<div class="small">Lỗi upload: ${escapeHtml(err.message)}</div>`;
-  }
-});
 
-/* ===== CREATE GROUP ===== */
-document.getElementById('createBtn').addEventListener('click', ()=> { document.getElementById('modal').style.display='flex'; });
-document.getElementById('doCancel').addEventListener('click', ()=> { document.getElementById('modal').style.display='none'; });
-document.getElementById('doCreate').addEventListener('click', async ()=>{
-  const name = document.getElementById('gName').value.trim();
-  const membersText = document.getElementById('gMembers').value.trim();
-  const members = membersText ? membersText.split(',').map(s=>s.trim()).filter(Boolean) : [];
-  if(!name){ alert('Nhập tên nhóm'); return; }
-  const obj = { id: 'grp_' + name.replace(/\s+/g,'_') + '_' + Math.random().toString(36).slice(2,7), name, members };
-  try{
-    const r = await fetch(API_ROOT + '/api/groups', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(obj)
-    });
-    if(!r.ok) throw new Error('create fail');
-    const j = await r.json();
-    if(j.ok){
-      // update local view
-      groups[j.id || obj.id] = obj;
-      document.getElementById('modal').style.display='none';
-      document.getElementById('gName').value=''; document.getElementById('gMembers').value='';
-      renderGroupList();
-      setTimeout(()=> openChat(j.id || obj.id, obj), 300);
-    } else {
-      throw new Error(j.error || 'create fail');
+    async function sendMsg() {
+      const text = document.getElementById("msg").value.trim();
+      if (!text || !currentGroup) return;
+      await fetch(`${API_BASE}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          group_id: currentGroup.id,
+          sender: user.username,
+          text,
+        }),
+      });
+      openChat(currentGroup);
+      document.getElementById("msg").value = "";
     }
-  }catch(err){
-    // fallback local save
-    const local = JSON.parse(localStorage.getItem('local_groups')||'[]');
-    local.push(obj); localStorage.setItem('local_groups', JSON.stringify(local));
-    groups[obj.id] = obj; renderGroupList();
-    document.getElementById('modal').style.display='none';
-    alert('Peer offline — nhóm được lưu cục bộ');
-  }
-});
 
-/* ===== MANAGE GROUP (devtool only) ===== */
-document.getElementById('manageBtn').addEventListener('click', ()=>{
-  if(!active || active.startsWith('dm:')) return;
-  const g = groups[active];
-  if(!g) return alert('Không tìm thấy nhóm');
-  const cmd = prompt('Lệnh (members / kick:username / addadmin:username / removeadmin:username):');
-  if(!cmd) return;
-  const [carg, target] = cmd.split(':').map(x=>x && x.trim());
-  if(carg === 'members') return alert('Thành viên: ' + (g.members||[]).join(', '));
-  if(carg === 'kick'){ g.members = (g.members||[]).filter(x=>x !== target); updateGroup(active,g); return; }
-  if(carg === 'addadmin'){ g.admins = g.admins || []; if(!g.admins.includes(target)) g.admins.push(target); updateGroup(active,g); return; }
-  if(carg === 'removeadmin'){ g.admins = (g.admins||[]).filter(x=>x!==target); updateGroup(active,g); return; }
-  alert('Lệnh không hợp lệ');
-});
-async function updateGroup(id, g){
-  try{
-    const r = await fetch(API_ROOT + '/api/groups', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({...g, id})});
-    if(r.ok){ groups[id]=g; renderGroupList(); alert('Cập nhật xong'); }
-  }catch(e){ alert('Cập nhật thất bại'); }
-}
+    function logout() {
+      localStorage.removeItem("user");
+      location.href = "login.html";
+    }
 
-/* ===== SEARCH ===== */
-document.getElementById('searchBox').addEventListener('input', function(){
-  const q = this.value.trim().toLowerCase();
-  const listItems = Array.from(document.querySelectorAll('#chatList .chat-item'));
-  listItems.forEach(item=>{
-    const txt = item.textContent.toLowerCase();
-    item.style.display = (!q || txt.includes(q)) ? '' : 'none';
-  });
-});
-
-/* ===== INITIALIZE ===== */
-loadGroups();
-
-/* optional: poll messages for active every 4s to simulate realtime */
-setInterval(()=>{ if(active && !active.startsWith('dm:')) loadMessagesForRoom(active); }, 4000);
-  <script src="js/auth.js"></script>
-<script>
-  ensureAuth(); // kiểm tra trạng thái login mỗi khi vào trang
-</script>
-
-</script>
+    loadGroups();
+  </script>
 </body>
 </html>
