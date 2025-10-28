@@ -1,115 +1,157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chatbot EduGround</title>
-  <link rel="stylesheet" href="assets/css/style.css" />
-  <style>
-    body { font-family: "Segoe UI"; background: #f0f9ff; margin: 0; }
-    header {
-      background: #2563eb; color: white;
-      padding: 12px 20px; display: flex; justify-content: space-between;
-      align-items: center;
-    }
-    nav a { color: white; margin: 0 8px; text-decoration: none; font-weight: 500; }
-    #chat {
-      width: 70%; margin: 30px auto; background: white;
-      border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      padding: 20px;
-    }
-    .msg { margin: 8px 0; }
-    .user { text-align: right; color: #1d4ed8; }
-    .bot { color: #374151; }
-    #input-area { display: flex; margin-top: 15px; }
-    input {
-      flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ccc;
-    }
-    button {
-      margin-left: 8px; background: #2563eb; color: white;
-      border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div>
-      <b>Eduground Cam</b> — Chatbot
-      <nav>
-        <a href="index.html">Trang chủ</a>
-        <a href="messages.html">Tin nhắn</a>
-        <a href="reminders.html">Reminder</a>
-        <a href="chatbot.html">Chatbot</a>
-        <a href="#" onclick="logout()">Đăng xuất</a>
-      </nav>
-    </div>
-    <div id="welcome"></div>
-  </header>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Chatbot Eduground</title>
 
-  <div id="chat">
-    <h3>🤖 Chatbot Eduground</h3>
-    <div id="chat-box"></div>
-    <div id="input-area">
-      <input type="text" id="msg" placeholder="Nhập câu hỏi..." />
-      <button onclick="sendMsg()">Gửi</button>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- MathJax (tùy dùng trong câu trả lời có LaTeX) -->
+<script>
+window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+<style>
+  :root{--blue:#0078d7;--bg:#f0f6fb;--card:#fff}
+  body{font-family:"Noto Sans",system-ui,Arial;background:var(--bg);margin:0}
+  .nav{background:var(--blue);color:#fff;padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+  .nav .left a{color:#fff;margin:0 10px;text-decoration:none;font-weight:600}
+  .nav .right{color:#fff}
+  .container{max-width:980px;margin:28px auto;padding:18px;background:var(--card);border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
+  #chatbox{height:520px;border:1px solid #e6eef7;border-radius:8px;padding:12px;overflow:auto;background:#fcfeff}
+  .msg{padding:10px 12px;border-radius:10px;max-width:78%;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+  .bot{background:#eef6fb;color:#0b2540}
+  .user{background:var(--blue);color:#fff;margin-left:auto;text-align:right}
+  .row{display:flex;gap:8px;margin-top:12px}
+  input[type=text]{flex:1;padding:10px;border-radius:8px;border:1px solid #cfdbe9}
+  button.primary{background:var(--blue);color:#fff;padding:10px 14px;border:none;border-radius:8px;cursor:pointer}
+  button.primary:disabled{opacity:0.6;cursor:not-allowed}
+  small.hint{color:#666}
+  .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+</style>
+</head>
+<body onload="ensureAuth()">
+
+  <div class="nav">
+    <div class="left">
+      <a href="index.html"><img src="assets/logo_index.png" style="height:30px;vertical-align:middle" alt="logo"></a>
+      <a href="index.html">Trang chủ</a>
+      <a href="messages.html">Tin nhắn</a>
+      <a href="reminders.html">Reminder</a>
+      <a href="sodaubai.html">Sổ đầu bài</a>
+      <a href="chatbot.html"><b>Chatbot</b></a>
+      <a href="meeting.html">Meeting</a>
+    </div>
+    <div class="right" id="welcomeArea">Chào mừng khách</div>
+  </div>
+
+  <div class="container">
+    <div class="meta">
+      <h2 id="title">🤖 Chatbot Eduground</h2>
+      <small class="hint">Hỏi bài, giải thích khái niệm, yêu cầu ví dụ, phép toán (LaTeX) hoặc hỏi SGK liên quan.</small>
+    </div>
+
+    <div id="chatbox">
+      <div class="msg bot" id="intro"></div>
+    </div>
+
+    <div class="row">
+      <input id="userInput" type="text" placeholder="Nhập câu hỏi của bạn..." autocomplete="off">
+      <button id="sendBtn" class="primary">Gửi</button>
     </div>
   </div>
 
-  <script>
-    const user = JSON.parse(localStorage.getItem("user") || "null");
-    if (!user) location.href = "login.html";
-    document.getElementById("welcome").textContent =
-      `Chào mừng ${user.username}, chúc bạn một ngày vui vẻ 🥰`;
+<script>
+/*
+  Frontend chatbot:
+  - Gửi POST /api/chatbot { query }
+  - Nhận { ok:true, reply: "..." } hoặc { ok:false, error:"..." }
+  - Requires: ensureAuth() stores user in localStorage user object { username, role }
+*/
 
-    const chatBox = document.getElementById("chat-box");
-    const OPENROUTER_API = "https://openrouter.ai/api/v1/chat/completions";
-    const API_KEY = "";
+// --- Auth helpers (local fallback, does not call server) ---
+function getUser(){
+  try { return JSON.parse(localStorage.getItem("user") || "null"); }
+  catch(e){ return null; }
+}
+function ensureAuth(){
+  const u = getUser();
+  if(!u){ window.location.href = "login.html"; return; }
+  document.getElementById('welcomeArea').innerHTML = `Chào mừng ${escapeHtml(u.username)}, chúc bạn 1 ngày vui vẻ 🌞`;
+  document.getElementById('intro').innerHTML = `Xin chào, <b>${escapeHtml(u.username)}</b> 👋<br/>Mình là trợ lý học tập Eduground — hỏi gì cứ hỏi nhé.`;
+}
+function logout(){
+  localStorage.removeItem("user");
+  sessionStorage.clear();
+  window.location.href = "login.html";
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    function addMsg(text, cls) {
-      const div = document.createElement("div");
-      div.className = "msg " + cls;
-      div.textContent = text;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+// --- Chat logic ---
+const API = "/api/chatbot"; // backend endpoint
+const input = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const chatbox = document.getElementById("chatbox");
+
+sendBtn.addEventListener("click", sendMessage);
+input.addEventListener("keydown", (e)=> { if(e.key === "Enter") sendMessage(); });
+
+function addMsg(className, html){
+  const d = document.createElement("div");
+  d.className = "msg " + className;
+  d.innerHTML = html;
+  chatbox.appendChild(d);
+  chatbox.scrollTop = chatbox.scrollHeight;
+}
+
+async function sendMessage(){
+  const text = input.value.trim();
+  if(!text) return;
+  // show user
+  addMsg("user", escapeHtml(text));
+  input.value = "";
+  // show waiting
+  const wait = document.createElement("div");
+  wait.className = "msg bot";
+  wait.id = "waiting";
+  wait.textContent = "⏳ Đang chờ phản hồi...";
+  chatbox.appendChild(wait);
+  chatbox.scrollTop = chatbox.scrollHeight;
+
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ query: text })
+    });
+    const data = await res.json();
+    document.getElementById("waiting")?.remove();
+    if(!res.ok || !data){
+      addMsg("bot", `⚠️ Lỗi server ${res.status} ${data?.error||''}`);
+      return;
     }
+    const reply = data.reply || data.text || "Không có phản hồi.";
+    // preserve line breaks and render code blocks
+    const html = renderReply(reply);
+    addMsg("bot", html);
+    if(window.MathJax) MathJax.typesetPromise();
+  } catch (err){
+    document.getElementById("waiting")?.remove();
+    addMsg("bot", `⚠️ Lỗi kết nối: ${escapeHtml(err.message||String(err))}`);
+  }
+}
 
-    addMsg("Xin chào! Mình là trợ lý học tập Eduground. Bạn muốn hỏi gì nào?", "bot");
-
-    async function sendMsg() {
-      const input = document.getElementById("msg");
-      const msg = input.value.trim();
-      if (!msg) return;
-      input.value = "";
-      addMsg(`${user.username}: ${msg}`, "user");
-
-      try {
-        const res = await fetch(OPENROUTER_API, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [
-              { role: "system", content: "Bạn là trợ lý học tập thân thiện Eduground." },
-              { role: "user", content: msg }
-            ]
-          })
-        });
-
-        const data = await res.json();
-        const reply = data.choices?.[0]?.message?.content || "Mình chưa hiểu câu hỏi này 😅";
-        addMsg(reply, "bot");
-      } catch (e) {
-        addMsg("Lỗi kết nối API 😢", "bot");
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem("user");
-      location.href = "login.html";
-    }
-  </script>
+function renderReply(text){
+  // convert triple-backtick to <pre>, keep newlines -> <br>
+  let out = escapeHtml(text);
+  // block code
+  out = out.replace(/```([\s\S]*?)```/g, (m,code)=>`<pre>${escapeHtml(code)}</pre>`);
+  // inline math/other handled by MathJax when present
+  out = out.replace(/\n/g, "<br>");
+  return out;
+}
+</script>
 </body>
 </html>
