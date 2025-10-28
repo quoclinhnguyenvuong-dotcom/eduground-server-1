@@ -60,9 +60,7 @@
       </div>
     </aside>
 
-    <main class="panel">
-      <h2>Tạo Reminder mới</h2>
-      <div class="note">Chỉ <strong>giáo viên</strong> mới có quyền gửi. Học sinh chỉ xem được reminders.</div>
+    <main class="panel"><h2>Tạo Reminder mới</h2><div class="note">Chỉ <strong>giáo viên</strong> mới có quyền gửi. Học sinh chỉ xem được reminders.</div>
 
       <label for="classInput">Lớp học *</label>
       <input id="classInput" type="text" placeholder="VD: 7C" />
@@ -81,11 +79,11 @@
       <div id="status" class="note"></div>
 
       <div id="resultBox" class="result" style="display:none">
-        <h4>Kết quả AI</h4>
+        <h4>Tóm tắt nội dung</h4>
         <div id="summaryArea"></div>
         <h4>Gợi ý BTVN</h4>
         <div id="homeworkArea"></div>
-        <h4>Link SGK (tự tìm)</h4>
+        <h4>Link SGK liên quan</h4>
         <div id="linkArea" class="link-sgk"></div>
       </div>
 
@@ -96,133 +94,105 @@
   </div>
 
 <script>
-/*
-  reminders.html frontend:
-  - ensureAuth() expects localStorage.user = { username, role }
-  - POST /api/reminders { class, transcript, files:[url,...], author }
-  - GET /api/reminders  -> list
-  - POST /api/upload (form-data file) -> { ok:true, url }
-*/
+// --- Cấu hình OpenRouter ---
+const API_KEY = "YOUR_API_KEY_HERE"; // ⚠️ tự điền key của mày vào đây
+const MODEL = "minimax/minimax-m2:free";
+const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// --- Auth helpers ---
-function getUser(){ try{ return JSON.parse(localStorage.getItem("user") || "null"); }catch(e){return null;} }
+function getUser(){
+  try{ return JSON.parse(localStorage.getItem("user") || "null"); }catch(e){return null;}
+}
 function ensureAuth(){
   const u = getUser();
   if(!u){ window.location.href = "login.html"; return; }
-  document.getElementById('welcomeArea').innerHTML = `Chào mừng ${escapeHtml(u.username)}, chúc bạn 1 ngày vui vẻ 🌞`;
-  // role handling: if not teacher => disable send
+  document.getElementById('welcomeArea').innerHTML = `Chào mừng ${escapeHtml(u.username)}, chúc bạn một ngày vui vẻ 🌞`;
   if(u.role !== "teacher"){
     document.getElementById("classInput").disabled = true;
     document.getElementById("contentInput").disabled = true;
     document.getElementById("fileInput").disabled = true;
     document.getElementById("sendBtn").disabled = true;
-    document.getElementById("status").textContent = "Bạn không có quyền gửi reminder. Chỉ giáo viên được tạo.";
-  } else {
-    document.getElementById("status").textContent = "";
+    document.getElementById("status").textContent = "Bạn không có quyền gửi reminder.";
   }
 }
 function logout(){ localStorage.removeItem("user"); sessionStorage.clear(); window.location.href = "login.html"; }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-// --- UI & API ---
-const API_REMIND = "/api/reminders";
-const API_UPLOAD = "/api/upload";
 
 document.getElementById("sendBtn").addEventListener("click", onSendReminder);
 document.addEventListener("DOMContentLoaded", ()=> { loadReminders(); });
 
 async function onSendReminder(){
   const u = getUser();
-  if(!u) return window.location.href = "login.html";
-  if(u.role !== "teacher") return alert("Chỉ giáo viên được gửi reminder.");
+  if(!u) return location.href="login.html";
+  if(u.role!=="teacher") return alert("Chỉ giáo viên được gửi reminder.");
+  const cls=document.getElementById("classInput").value.trim();
+  const text=document.getElementById("contentInput").value.trim();if(!cls||!text) return alert("Vui lòng nhập lớp và nội dung.");
+  setStatus("⏳ Đang tóm tắt với AI...");
 
-  const cls = document.getElementById("classInput").value.trim();
-  const text = document.getElementById("contentInput").value.trim();
-  const files = document.getElementById("fileInput").files;
+  // gọi OpenRouter AI để tạo summary, homework, link
+  const prompt = `Bạn là trợ lý học tập. Dưới đây là nội dung bài giảng lớp ${cls}:\n\n${text}\n\nHãy:
+  1. Tóm tắt lại nội dung ngắn gọn (tối đa 5 câu).
+  2. Gợi ý 1-3 bài tập về nhà liên quan.
+  3. Cung cấp link SGK chính thức phù hợp (nếu có).`;
 
-  if(!cls || !text) { alert("Vui lòng nhập lớp và nội dung bài giảng."); return; }
-
-  setStatus("⏳ Đang xử lý...");
-
-  // upload files sequentially (simple)
-  const uploaded = [];
-  try {
-    for(const f of files){
-      const fd = new FormData();
-      fd.append("file", f);
-      const r = await fetch(API_UPLOAD, { method: "POST", body: fd });
-      const j = await r.json();
-      if(!r.ok || !j.ok) {
-        console.warn("upload fail", j);
-        // continue but warn
-      } else {
-        uploaded.push(j.url); // e.g. "/uploads/uuid-name.ext"
-      }
-    }
-  } catch(e){
-    console.warn("upload error", e);
-    // proceed without attachments
-  }
-
-  // send reminder to backend which will call AI and return summary/homework/link
-  try {
-    const payload = {
-      class: cls,
-      transcript: text,
-      files: uploaded,
-      author: u.username
-    };
-    const r = await fetch(API_REMIND, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(payload)
+  try{
+    const r = await fetch(API_URL, {
+      method:"POST",
+      headers:{
+        "Authorization":`Bearer ${API_KEY}`,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        model: MODEL,
+        messages: [
+          {role:"system", content:"Bạn là trợ lý giáo viên tiếng Việt, giúp tóm tắt và gợi ý bài tập."},
+          {role:"user", content: prompt}
+        ]
+      })
     });
-    const j = await r.json();
-    if(!r.ok || !j.ok) {
-      setStatus("❌ Lỗi gửi reminder: " + (j?.error || r.status));
-      return;
-    }
-    // show result from AI
-    showResult(j);
-    setStatus("✅ Reminder đã gửi thành công.");
-    loadReminders(); // refresh list
-  } catch(err){
-    setStatus("⚠️ Lỗi kết nối: " + (err.message||err));
+    if(!r.ok) throw new Error(r.status);
+    const d=await r.json();
+    const reply=d?.choices?.[0]?.message?.content||"Không có phản hồi.";
+    const parts=parseAIReply(reply);
+    showResult(parts);
+    setStatus("✅ Hoàn tất nhờ AI.");
+  }catch(e){
+    setStatus("⚠️ Lỗi AI: "+e.message);
   }
 }
 
-function setStatus(s){ document.getElementById("status").textContent = s; }
-
+function parseAIReply(txt){
+  const lines = txt.split("\n").filter(l=>l.trim());
+  return {
+    summary: lines.find(l=>/tóm|nội dung/i.test(l)) || lines.slice(0,3).join(" "),
+    homework: lines.find(l=>/bài tập/i.test(l)) || lines.slice(3,6).join(" "),
+    link: (txt.match(/https?:\/\/\S+/)||[])[0] || ""
+  };
+}
 function showResult(res){
-  document.getElementById("resultBox").style.display = "block";
-  document.getElementById("summaryArea").innerHTML = res.summary ? escapeHtml(res.summary).replace(/\n/g,"<br>") : "<i>Không có</i>";
-  document.getElementById("homeworkArea").innerHTML = res.homework ? escapeHtml(res.homework).replace(/\n/g,"<br>") : "<i>Không có</i>";
-  document.getElementById("linkArea").innerHTML = res.link ? `<a href="${res.link}" target="_blank">${res.link}</a>` : "<i>Không có</i>";
+  document.getElementById("resultBox").style.display="block";
+  document.getElementById("summaryArea").innerHTML=escapeHtml(res.summary||"Không có").replace(/\n/g,"<br>");
+  document.getElementById("homeworkArea").innerHTML=escapeHtml(res.homework||"Không có").replace(/\n/g,"<br>");
+  document.getElementById("linkArea").innerHTML=res.link?`<a href="${res.link}" target="_blank">${res.link}</a>`:"<i>Không có</i>";
 }
 
-// load reminders list (GET)
+function setStatus(s){ document.getElementById("status").textContent=s; }
+
 async function loadReminders(){
-  const box = document.getElementById("listReminders");
-  box.textContent = "Đang tải...";
-  try {
-    const r = await fetch(API_REMIND);
-    const j = await r.json();
-    if(!r.ok || !j) { box.textContent = "Không tải được reminders."; return; }
-    // expect j to be array
-    if(!Array.isArray(j) || j.length===0){ box.innerHTML = "<i>Chưa có reminders</i>"; return; }
-    const html = j.slice().reverse().map(it=>{
-      // expected fields: id, class, summary (or transcript), author, time
-      const t = new Date((it.time || Date.now())*1000);
+  const box=document.getElementById("listReminders");
+  box.textContent="Đang tải...";
+  try{
+    const r=await fetch("/api/reminders");
+    const j=await r.json();
+    if(!Array.isArray(j)||j.length===0){ box.innerHTML="<i>Chưa có reminders</i>";return; }
+    const html=j.slice().reverse().map(it=>{
+      const t=new Date((it.time||Date.now())*1000);
       return `<div style="margin-bottom:10px;padding:8px;background:#fff;border-radius:6px;border:1px solid #eef6ff">
-        <div style="font-weight:700">${escapeHtml(it.class || it.className || "—")}</div>
-        <div style="font-size:0.95rem;color:#333;margin:6px 0">${escapeHtml((it.summary||it.transcript||"")).slice(0,300)}${(it.summary||it.transcript||"").length>300?"…":""}</div>
+        <div style="font-weight:700">${escapeHtml(it.class||"—")}</div>
+        <div style="font-size:0.95rem;margin:6px 0">${escapeHtml(it.summary||it.transcript||"")}</div>
         <div style="font-size:0.85rem;color:var(--muted)">Tác giả: ${escapeHtml(it.author||"—")} — ${t.toLocaleString()}</div>
       </div>`;
     }).join("");
-    box.innerHTML = html;
-  } catch(e){
-    box.textContent = "Lỗi tải: " + (e.message||e);
-  }
+    box.innerHTML=html;}catch(e){ box.textContent="Lỗi tải: "+e.message; }
 }
 </script>
 </body>
