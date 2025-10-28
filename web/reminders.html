@@ -1,255 +1,229 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <title>EduGround – Reminders</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      background: #f3f4f6;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #2563eb;
-      color: white;
-      padding: 12px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 20px;
-    }
-    header .user-info {
-      font-size: 14px;
-    }
-    main {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      height: calc(100vh - 54px);
-    }
-    aside {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    aside h2 {
-      font-size: 16px;
-      border-bottom: 1px solid #475569;
-      padding-bottom: 6px;
-      margin-bottom: 6px;
-    }
-    aside .fixed, aside .settings {
-      font-size: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    aside button {
-      padding: 6px 10px;
-      border: none;
-      background: #3b82f6;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    aside button:hover {
-      background: #60a5fa;
-    }
-    section {
-      padding: 16px;
-      overflow-y: auto;
-    }
-    form {
-      background: white;
-      padding: 16px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    form h2 {
-      font-size: 18px;
-      margin-top: 0;
-    }
-    form input, form textarea {
-      width: 100%;
-      padding: 8px;
-      margin: 6px 0 10px 0;
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-    form input[type=file] {
-      border: none;
-    }
-    form button {
-      background: #2563eb;
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    form button:hover {
-      background: #1d4ed8;
-    }
-    .reminder {
-      background: white;
-      padding: 16px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .reminder h3 {
-      margin: 0 0 6px;
-      color: #1e293b;
-    }
-    .reminder small {
-      color: #6b7280;
-    }
-    .reminder p {
-      margin: 8px 0;
-      white-space: pre-wrap;
-    }
-    .attachments a {
-      display: inline-block;
-      background: #e0f2fe;
-      padding: 4px 8px;
-      border-radius: 4px;
-      margin: 3px;
-      text-decoration: none;
-      color: #0369a1;
-      font-size: 13px;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>EduGround Reminder Center</h1>
-    <div class="user-info" id="user-info">Khách</div>
-  </header>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>EduGround Reminder Center</title>
 
-  <main>
-    <aside>
-      <div class="fixed">
-        <h2>Thông báo cố định</h2>
-        <ul id="fixed-list"><li>Trực nhật: 7C</li>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--nav:#1e73d1;--dark:#16232b;--card:#fff;--muted:#6b7c8f}
+  body{font-family:"Noto Sans",system-ui,Arial;background:#eef3f7;margin:0}
+  .nav{background:var(--nav);color:#fff;padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+  .nav a{color:#fff;margin:0 10px;text-decoration:none;font-weight:600}
+  .layout{display:flex;max-width:1100px;margin:22px auto;gap:20px;padding:0 12px}
+  .sidebar{width:260px;background:#17232b;color:#fff;border-radius:8px;padding:18px}
+  .sidebar h3{margin-top:0}
+  .sidebar .btn{display:block;width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none;cursor:pointer}
+  .btn.refresh{background:#2e8bff;color:#fff}
+  .btn.logout{background:#ff6b6b;color:#fff}
+  .panel{flex:1;background:var(--card);padding:18px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+  label{display:block;margin-top:12px;font-weight:600}
+  input[type=text], textarea{width:100%;padding:10px;border:1px solid #d6e0ea;border-radius:6px}
+  textarea{min-height:160px;resize:vertical}
+  .row{display:flex;gap:8px;margin-top:12px}
+  .note{color:var(--muted);font-size:0.9rem;margin-top:8px}
+  .muted-block{background:#f7fafc;padding:10px;border-radius:6px;border:1px solid #eef4fb;margin-top:12px}
+  button.primary{background:#2e8bff;color:#fff;padding:10px 14px;border:none;border-radius:8px;cursor:pointer}
+  button.primary:disabled{opacity:0.6;cursor:not-allowed}
+  .result{margin-top:18px;padding:12px;background:#fcfeff;border-radius:6px;border:1px solid #e6eef7}
+  .link-sgk{word-break:break-all}
+</style>
+</head>
+<body onload="ensureAuth()">
+
+  <div class="nav">
+    <div>
+      <a href="index.html"><img src="assets/logo_index.png" style="height:30px;vertical-align:middle" alt="logo"></a>
+      <a href="index.html">Trang chủ</a>
+      <a href="messages.html">Tin nhắn</a>
+      <a href="reminders.html"><b>Reminder</b></a>
+      <a href="chatbot.html">Chatbot</a>
+    </div>
+    <div id="welcomeArea">Chào mừng khách</div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <h3>EduGround Reminder Center</h3>
+      <div>
+        <strong>Thông báo cố định</strong>
+        <ul style="padding-left:18px;">
+          <li>Trực nhật: 7C</li>
           <li>Kiểm tra 15': Toán - Tiết 2</li>
         </ul>
       </div>
-      <div class="settings">
-        <h2>Cài đặt</h2>
-        <button id="reload-btn">🔄 Làm mới</button>
-        <button id="logout-btn">🚪 Đăng xuất</button>
+
+      <div style="margin-top:12px">
+        <button class="btn refresh" onclick="loadReminders()">🔄 Làm mới</button>
+        <button class="btn logout" onclick="logout()">🔓 Đăng xuất</button>
       </div>
     </aside>
 
-    <section>
-      <form id="reminder-form">
-        <h2>Tạo Reminder mới</h2>
-        <label>Lớp học *</label>
-        <input type="text" id="class" placeholder="VD: 7C" required />
-        <label>Nội dung STT / bài giảng *</label>
-        <textarea id="transcript" rows="6" placeholder="Dán STT hoặc ghi chú bài giảng tại đây..." required></textarea>
-        <label>Tài liệu đính kèm (tùy chọn)</label>
-        <input type="file" id="file" multiple />
-        <button type="submit">📤 Gửi Reminder</button>
-      </form>
+    <main class="panel">
+      <h2>Tạo Reminder mới</h2>
+      <div class="note">Chỉ <strong>giáo viên</strong> mới có quyền gửi. Học sinh chỉ xem được reminders.</div>
 
-      <div id="reminder-list"></div>
-    </section>
-  </main>
+      <label for="classInput">Lớp học *</label>
+      <input id="classInput" type="text" placeholder="VD: 7C" />
 
-  <script>
-    const API = location.origin + "/api";
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const infoBox = document.getElementById("user-info");
-    if (user.user) infoBox.textContent = user.user + " (" + user.role + ")";
-    else window.location.href = "login.html";
+      <label for="contentInput">Nội dung STT / bài giảng *</label>
+      <textarea id="contentInput" placeholder="Dán STT hoặc ghi chú bài giảng tại đây..."></textarea>
 
-    async function fetchReminders() {
-      const res = await fetch(API + "/reminders");
-      const data = await res.json();
-      renderReminders(data);
-    }
+      <label>Tài liệu đính kèm (tùy chọn)</label>
+      <input id="fileInput" type="file" multiple />
 
-    function renderReminders(data) {
-      const cont = document.getElementById("reminder-list");
-      cont.innerHTML = "";
-      const arr = Object.values(data).sort((a,b)=>b.time - a.time);
-      for (let r of arr) {
-        const el = document.createElement("div");
-        el.className = "reminder";
-        el.innerHTML = `
-          <h3>${r.class} – ${r.teacher}</h3>
-          <small>${new Date(r.time*1000).toLocaleString()}</small>
-          <p><b>Tóm tắt:</b><br>${r.summary || "(chưa có tóm tắt)"}</p>
-          ${r.attachments?.length ? 
-            `<div class="attachments">${r.attachments.map(a=>`<a href="${a}" target="_blank">${a.split('/').pop()}</a>`).join('')}</div>` 
-            : ""}
-          <details><summary>Chi tiết STT</summary><p>${r.transcript}</p></details>
-        `;
-        cont.appendChild(el);
-      }
-    }
+      <div class="row">
+        <button id="sendBtn" class="primary">📨 Gửi Reminder</button>
+        <div style="flex:1"></div>
+      </div>
 
-    document.getElementById("reminder-form").addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const cls = document.getElementById("class").value.trim();
-      const transcript = document.getElementById("transcript").value.trim();
-      if (!cls || !transcript) return alert("Vui lòng nhập đầy đủ thông tin!");
+      <div id="status" class="note"></div>
 
-      let attachments = [];
-      const files = document.getElementById("file").files;
-      if (files.length) {
-        for (let f of files) {
-          const fd = new FormData();
-          fd.append("file", f);
-          const res = await fetch(API + "/upload", { method: "POST", body: fd });
-          const data = await res.json();
-          if (data.ok) attachments.push(data.url);}
-      }
+      <div id="resultBox" class="result" style="display:none">
+        <h4>Kết quả AI</h4>
+        <div id="summaryArea"></div>
+        <h4>Gợi ý BTVN</h4>
+        <div id="homeworkArea"></div>
+        <h4>Link SGK (tự tìm)</h4>
+        <div id="linkArea" class="link-sgk"></div>
+      </div>
 
-      const payload = {
-        class: cls,
-        teacher: user.user || "unknown",
-        transcript,
-        attachments
-      };
+      <hr style="margin:18px 0" />
+      <h3>Danh sách reminders (mới nhất)</h3>
+      <div id="listReminders" class="muted-block">Đang tải...</div>
+    </main>
+  </div>
 
-      const res = await fetch(API + "/reminders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.ok) {
-        alert("Tạo reminder thành công!");
-        document.getElementById("transcript").value = "";
-        document.getElementById("file").value = "";
-        fetchReminders();
-      } else {
-        alert("Lỗi: " + (data.error || "Không rõ"));
-      }
-    });
-
-    document.getElementById("reload-btn").onclick = fetchReminders;
-    document.getElementById("logout-btn").onclick = ()=>{
-      localStorage.removeItem("user");
-      window.location.href = "login.html";
-    };
-    <script src="js/auth.js"></script>
 <script>
-  ensureAuth(); // kiểm tra trạng thái login mỗi khi vào trang
-</script>
+/*
+  reminders.html frontend:
+  - ensureAuth() expects localStorage.user = { username, role }
+  - POST /api/reminders { class, transcript, files:[url,...], author }
+  - GET /api/reminders  -> list
+  - POST /api/upload (form-data file) -> { ok:true, url }
+*/
 
-    fetchReminders();
-  </script>
+// --- Auth helpers ---
+function getUser(){ try{ return JSON.parse(localStorage.getItem("user") || "null"); }catch(e){return null;} }
+function ensureAuth(){
+  const u = getUser();
+  if(!u){ window.location.href = "login.html"; return; }
+  document.getElementById('welcomeArea').innerHTML = `Chào mừng ${escapeHtml(u.username)}, chúc bạn 1 ngày vui vẻ 🌞`;
+  // role handling: if not teacher => disable send
+  if(u.role !== "teacher"){
+    document.getElementById("classInput").disabled = true;
+    document.getElementById("contentInput").disabled = true;
+    document.getElementById("fileInput").disabled = true;
+    document.getElementById("sendBtn").disabled = true;
+    document.getElementById("status").textContent = "Bạn không có quyền gửi reminder. Chỉ giáo viên được tạo.";
+  } else {
+    document.getElementById("status").textContent = "";
+  }
+}
+function logout(){ localStorage.removeItem("user"); sessionStorage.clear(); window.location.href = "login.html"; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// --- UI & API ---
+const API_REMIND = "/api/reminders";
+const API_UPLOAD = "/api/upload";
+
+document.getElementById("sendBtn").addEventListener("click", onSendReminder);
+document.addEventListener("DOMContentLoaded", ()=> { loadReminders(); });
+
+async function onSendReminder(){
+  const u = getUser();
+  if(!u) return window.location.href = "login.html";
+  if(u.role !== "teacher") return alert("Chỉ giáo viên được gửi reminder.");
+
+  const cls = document.getElementById("classInput").value.trim();
+  const text = document.getElementById("contentInput").value.trim();
+  const files = document.getElementById("fileInput").files;
+
+  if(!cls || !text) { alert("Vui lòng nhập lớp và nội dung bài giảng."); return; }
+
+  setStatus("⏳ Đang xử lý...");
+
+  // upload files sequentially (simple)
+  const uploaded = [];
+  try {
+    for(const f of files){
+      const fd = new FormData();
+      fd.append("file", f);
+      const r = await fetch(API_UPLOAD, { method: "POST", body: fd });
+      const j = await r.json();
+      if(!r.ok || !j.ok) {
+        console.warn("upload fail", j);
+        // continue but warn
+      } else {
+        uploaded.push(j.url); // e.g. "/uploads/uuid-name.ext"
+      }
+    }
+  } catch(e){
+    console.warn("upload error", e);
+    // proceed without attachments
+  }
+
+  // send reminder to backend which will call AI and return summary/homework/link
+  try {
+    const payload = {
+      class: cls,
+      transcript: text,
+      files: uploaded,
+      author: u.username
+    };
+    const r = await fetch(API_REMIND, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+    if(!r.ok || !j.ok) {
+      setStatus("❌ Lỗi gửi reminder: " + (j?.error || r.status));
+      return;
+    }
+    // show result from AI
+    showResult(j);
+    setStatus("✅ Reminder đã gửi thành công.");
+    loadReminders(); // refresh list
+  } catch(err){
+    setStatus("⚠️ Lỗi kết nối: " + (err.message||err));
+  }
+}
+
+function setStatus(s){ document.getElementById("status").textContent = s; }
+
+function showResult(res){
+  document.getElementById("resultBox").style.display = "block";
+  document.getElementById("summaryArea").innerHTML = res.summary ? escapeHtml(res.summary).replace(/\n/g,"<br>") : "<i>Không có</i>";
+  document.getElementById("homeworkArea").innerHTML = res.homework ? escapeHtml(res.homework).replace(/\n/g,"<br>") : "<i>Không có</i>";
+  document.getElementById("linkArea").innerHTML = res.link ? `<a href="${res.link}" target="_blank">${res.link}</a>` : "<i>Không có</i>";
+}
+
+// load reminders list (GET)
+async function loadReminders(){
+  const box = document.getElementById("listReminders");
+  box.textContent = "Đang tải...";
+  try {
+    const r = await fetch(API_REMIND);
+    const j = await r.json();
+    if(!r.ok || !j) { box.textContent = "Không tải được reminders."; return; }
+    // expect j to be array
+    if(!Array.isArray(j) || j.length===0){ box.innerHTML = "<i>Chưa có reminders</i>"; return; }
+    const html = j.slice().reverse().map(it=>{
+      // expected fields: id, class, summary (or transcript), author, time
+      const t = new Date((it.time || Date.now())*1000);
+      return `<div style="margin-bottom:10px;padding:8px;background:#fff;border-radius:6px;border:1px solid #eef6ff">
+        <div style="font-weight:700">${escapeHtml(it.class || it.className || "—")}</div>
+        <div style="font-size:0.95rem;color:#333;margin:6px 0">${escapeHtml((it.summary||it.transcript||"")).slice(0,300)}${(it.summary||it.transcript||"").length>300?"…":""}</div>
+        <div style="font-size:0.85rem;color:var(--muted)">Tác giả: ${escapeHtml(it.author||"—")} — ${t.toLocaleString()}</div>
+      </div>`;
+    }).join("");
+    box.innerHTML = html;
+  } catch(e){
+    box.textContent = "Lỗi tải: " + (e.message||e);
+  }
+}
+</script>
 </body>
 </html>
