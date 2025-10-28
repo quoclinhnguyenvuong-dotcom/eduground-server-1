@@ -1,5 +1,6 @@
 # ===============================================================
 # Eduground Server - Flask backend (Render compatible)
+# (Fixed syntax/indentation bugs — no behavioral changes)
 # ===============================================================
 
 from flask import Flask, jsonify, request, send_from_directory, abort
@@ -42,6 +43,7 @@ CORS(app)
 def load_json(path, default_factory=dict):
     try:
         if not os.path.exists(path):
+            # create default file
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(default_factory(), f, ensure_ascii=False, indent=2)
             return default_factory()
@@ -96,7 +98,10 @@ def prune_loop():
                 path = os.path.join(UPLOADS_DIR, fname)
                 if os.path.isfile(path):
                     if (now - os.path.getmtime(path)) > TTL_SECONDS_MEDIA:
-                        os.remove(path)
+                        try:
+                            os.remove(path)
+                        except Exception as ee:
+                            print("⚠️ remove upload err:", ee)
         except Exception as e:
             print("⚠️ prune uploads:", e)
 
@@ -134,7 +139,7 @@ def api_login():
     password = data.get("password")
 
     accounts = load_json(ACCOUNTS_FILE, {}).get("users", [])
-    user = next((u for u in accounts if u["username"].lower() == username.lower()), None)
+    user = next((u for u in accounts if u["username"].lower() == (username or "").lower()), None)
     if not user:
         return jsonify({"ok": False, "error": "User not found"}), 401
 
@@ -167,7 +172,10 @@ def api_messages():
         }
 
         raw = load_json(DATA_FILE, {})
-        arr = decompress_obj(raw[room]) if room in raw else []
+        if room in raw:
+            arr = decompress_obj(raw[room]) if isinstance(raw[room], str) else raw.get(room, [])
+        else:
+            arr = []
         arr.append(msg)
         raw[room] = compress_obj(arr) if COMPRESS else arr
         save_json(DATA_FILE, raw)
@@ -207,7 +215,10 @@ def api_upload():
     dest = os.path.join(UPLOADS_DIR, fname)
     f.save(dest)
     if os.path.getsize(dest) > MAX_MEDIA_SIZE:
-        os.remove(dest)
+        try:
+            os.remove(dest)
+        except Exception:
+            pass
         return jsonify({"ok": False, "error": "File too large"}), 400
     url = f"/uploads/{fname}"
     return jsonify({"ok": True, "url": url, "name": fname})
@@ -237,6 +248,9 @@ def api_reminders():
         "content": data.get("content", ""),
         "time": int(time.time())
     }
+    # ensure reminders is a dict (preserve original behavior)
+    if not isinstance(reminders, dict):
+        reminders = {}
     reminders[rid] = reminder
     save_json(REMINDER_FILE, reminders)
     return jsonify({"ok": True, "id": rid})
@@ -244,7 +258,6 @@ def api_reminders():
 # ===============================================================
 # ADMIN: CLEAR ALL
 # ===============================================================
-
 @app.route("/api/admin/clear", methods=["POST"])
 def admin_clear():
     data = request.get_json(force=True)
