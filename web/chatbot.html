@@ -44,9 +44,9 @@
 <script>
 /* ================= CONFIG ================== */
 // ⚠️ GẮN TOKEN HF TRỰC TIẾP Ở ĐÂY
-const HF_TOKEN = "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"; // <-- dán API token HuggingFace của mày
-const MODEL = "openai/gpt-oss-20b"; // hoặc model khác
-const API_URL = `https://api-inference.huggingface.co/models/${MODEL}`;
+const OPENROUTER_API   = "https://openrouter.ai/api/v1/chat/completions"; // <-- dán API token HuggingFace của mày
+const OPENROUTER_KEY = "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"; // hoặc model khác
+const MODEL = "tngtech/deepseek-r1t2-chimera:free";
 /* =========================================== */
 
 const chatbox = document.getElementById("chatbox");
