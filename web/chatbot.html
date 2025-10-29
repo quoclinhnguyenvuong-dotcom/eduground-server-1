@@ -1,25 +1,24 @@
 <!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Chatbot — Eduground</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chatbot Eduground</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root{--blue:#0078d7;--bg:#f4f8fc;--card:#fff;--muted:#6d7b86}
+  :root{--blue:#0078d7;--bg:#f4f8fc;--card:#fff}
   body{font-family:"Noto Sans",system-ui,Arial;background:var(--bg);margin:0;color:#122}
   .nav{background:var(--blue);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
   .nav a{color:#fff;margin-left:12px;text-decoration:none}
   .wrap{max-width:900px;margin:24px auto;padding:18px;background:var(--card);border-radius:10px;box-shadow:0 8px 30px rgba(13,40,70,0.06)}
-  #chatbox{height:520px;border:1px solid #e7f0fa;border-radius:8px;padding:12px;overflow:auto;background:#fcfeff}
+  #chatbox{height:500px;border:1px solid #e7f0fa;border-radius:8px;padding:12px;overflow:auto;background:#fcfeff}
   .msg{padding:10px 12px;border-radius:10px;max-width:78%;margin:8px 0;white-space:pre-wrap}
   .msg.bot{background:#eef6fb;color:#07304a}
   .msg.me{background:var(--blue);color:#fff;margin-left:auto;text-align:right}
   .row{display:flex;gap:8px;margin-top:12px}
   input[type=text]{flex:1;padding:10px;border-radius:8px;border:1px solid #cddce8}
   button{background:var(--blue);color:#fff;padding:10px 14px;border:none;border-radius:8px;cursor:pointer}
-  .status{margin-top:10px;color:var(--muted)}
-  .small{font-size:0.9rem;color:var(--muted)}
+  .status{margin-top:10px;color:#666;font-size:0.9rem}
 </style>
 </head>
 <body>
@@ -28,142 +27,96 @@
       <a href="index.html"><strong>Eduground</strong></a>
       <a href="messages.html">Tin nhắn</a>
       <a href="reminders.html">Reminder</a>
-      <a href="sodaubai.html">Sổ đầu bài</a>
+      <a href="chatbot.html"><b>Chatbot</b></a>
     </div>
-    <div id="userArea" class="small">...</div>
   </div>
 
   <div class="wrap">
-    <h2 id="title">🤖 Chatbot trợ lý học tập</h2>
-    <div id="chatbox"><div class="small">Chưa có cuộc trò chuyện. Nhập câu hỏi để bắt đầu.</div></div>
-
+    <h2>🤖 Chatbot trợ lý học tập (HF)</h2>
+    <div id="chatbox"><div class="msg bot">Xin chào 👋! Mình là Chatbot Eduground. Bạn có thể hỏi mình về bài học, công thức, hay khái niệm.</div></div>
     <div class="row">
-      <input id="input" placeholder="Nhập câu hỏi của bạn... (nhấn Enter để gửi)">
+      <input id="input" placeholder="Nhập câu hỏi của bạn...">
       <button id="sendBtn">Gửi</button>
-      <button id="clearBtn" title="Xoá lịch sử">Xoá</button>
     </div>
-
     <div class="status" id="status"></div>
-    <div style="margin-top:10px" class="small">
-      Lưu token HF (tạm): từ console gõ
-      <code>localStorage.setItem('HF_TOKEN','sk-...')</code>
-    </div>
   </div>
 
 <script>
-/* ---------- CONFIG ---------- */
-const MODEL = "MiniMaxAI/MiniMax-M2"; // hoặc thay model khác
-const HF_API_BASE = "https://api-inference.huggingface.co/models/"; // rest inference
-// nếu muốn proxy qua server thay API_BASE thành '/api/proxy_hf'
-/* ---------------------------- */
+/* ================= CONFIG ================== */
+// ⚠️ GẮN TOKEN HF TRỰC TIẾP Ở ĐÂY
+const HF_TOKEN = "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"; // <-- dán API token HuggingFace của mày
+const MODEL = "MiniMaxAI/MiniMax-M2"; // hoặc model khác
+const API_URL = `https://api-inference.huggingface.co/models/${MODEL}`;
+/* =========================================== */
 
-function getUser(){ try{ return JSON.parse(localStorage.getItem('user')||'null'); }catch(e){return null;} }
-function ensureAuth(){
-  const u = getUser();
-  if(!u){ location.href = 'login.html'; return false; }document.getElementById('userArea').innerHTML = `Chào <b>${u.username}</b> — vai trò: ${u.role}`;
-  return true;
-}
+const chatbox = document.getElementById("chatbox");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("sendBtn");
+const statusEl = document.getElementById("status");
 
-if(!ensureAuth()) throw(new Error('not-auth'));
+let convo = [];
 
-const chatbox = document.getElementById('chatbox');
-const input = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
-const clearBtn = document.getElementById('clearBtn');
-const statusEl = document.getElementById('status');
-
-let convo = []; // local conversation memory (pairs)
-
-/* helper ui */
 function appendMessage(text, who='bot'){
-  const el = document.createElement('div');
-  el.className = 'msg ' + (who==='me' ? 'me' : 'bot');
-  el.innerHTML = text;
-  chatbox.appendChild(el);
+  const div = document.createElement('div');
+  div.className = 'msg ' + (who==='me'?'me':'bot');
+  div.innerHTML = text;
+  chatbox.appendChild(div);
   chatbox.scrollTop = chatbox.scrollHeight;
 }
-function setStatus(s, err=false){ statusEl.textContent = s || ''; if(err) statusEl.style.color='crimson'; else statusEl.style.color=''; }
 
-/* send flow */
-async function askModel(prompt){
-  setStatus('⏳ Đang gọi model...');
-  // get token from localStorage
-  const token = localStorage.getItem('HF_TOKEN') || '';
-  if(!token){ setStatus('❌ Chưa có HuggingFace token. Set localStorage HF_TOKEN.', true); throw new Error('No HF token'); }
-
-  // build a simple "chat prompt" using conversation memory
-  const sys = "Bạn là trợ lý học tập tiếng Việt, tóm tắt ngắn gọn, đưa gợi ý bài tập và nếu có thể tìm link SGK phù hợp (nếu không rõ hãy trả 'Không tìm được link'). Trả lời bằng tiếng Việt.";
-  let fullPrompt = sys + "\n\n";
-  // include last few messages for context
-  convo.slice(-8).forEach(m=>{
-    fullPrompt += (m.role === 'user' ? "Học sinh: " : "Trợ lý: ") + m.text + "\n";
+function setStatus(s){ statusEl.textContent = s; }async function callHF(prompt){
+  setStatus("⏳ Đang gọi model...");
+  const sys = "Bạn là trợ lý học tập tiếng Việt. Giải thích, hướng dẫn và hiển thị công thức bằng LaTeX nếu có thể.";
+  let context = sys + "\n\n";
+  convo.slice(-6).forEach(m=>{
+    context += (m.role==='user'?"Học sinh: ":"Trợ lý: ") + m.text + "\n";
   });
-  fullPrompt += "Học sinh: " + prompt + "\nTrợ lý: ";
+  context += "Học sinh: " + prompt + "\nTrợ lý:";
 
-  const url = HF_API_BASE + MODEL;
-  const body = { inputs: fullPrompt, parameters: { max_new_tokens: 512, do_sample: false } };
-
-  // If your server provides a proxy to hide token (recommended), replace url with '/api/proxy_hf' and send model param
-  const r = await fetch(url, {
-    method: 'POST',
+  const r = await fetch(API_URL, {
+    method: "POST",
     headers: {
-      "Authorization": "Bearer " + token,
+      "Authorization": `Bearer ${HF_TOKEN}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify({
+      inputs: context,
+      parameters: { max_new_tokens: 300, temperature: 0.5 }
+    })
   });
 
   if(!r.ok){
-    const txt = await r.text().catch(()=>'');
-    setStatus(`❌ Model call failed: ${r.status} ${r.statusText} — ${txt}`, true);
-    throw new Error('HF error');
+    throw new Error(`HF API lỗi: ${r.status} ${r.statusText}`);
   }
-  // HF returns an array or object depending on model; usually {generated_text: "..."}
-  const j = await r.json();
 
-  // parse HF response
-  // Two common formats:
-  // - [{generated_text: "..."}]  OR
-  // - {generated_text: "..."} OR
-  // - [{ generated_text: "...", ... }]
+  const data = await r.json();
   let reply = "";
-  if(Array.isArray(j)){
-    if(j.length>0 && j[0].generated_text) reply = j[0].generated_text;
-    else if(typeof j[0].generated_text === 'undefined') reply = JSON.stringify(j[0]);
-  } else if(j.generated_text) {
-    reply = j.generated_text;
-  } else {
-    reply = JSON.stringify(j).slice(0,2000);
-  }
+  if(Array.isArray(data) && data[0]?.generated_text) reply = data[0].generated_text;
+  else if(data.generated_text) reply = data.generated_text;
+  else reply = JSON.stringify(data);
 
-  return reply;
-}async function onSend(){
+  setStatus("✅ Đã nhận phản hồi");
+  return reply.trim();
+}
+
+async function sendMsg(){
   const text = input.value.trim();
   if(!text) return;
-  appendMessage(escapeHtml(text), 'me');
-  input.value = '';
-  convo.push({ role:'user', text });
+  appendMessage(text, 'me');
+  convo.push({role:'user', text});
+  input.value = "";
   try{
-    const reply = await askModel(text);
-    // optional post-process (split sections)
-    appendMessage(escapeHtml(reply), 'bot');
-    convo.push({ role:'assistant', text: reply });
-    setStatus('✅ Hoàn tất');
-  }catch(err){
-    appendMessage('⚠️ Lỗi khi gọi model. ' + (err.message||''), 'bot');
+    const reply = await callHF(text);
+    appendMessage(reply, 'bot');
+    convo.push({role:'assistant', text:reply});
+  }catch(e){
+    appendMessage("⚠️ " + e.message, 'bot');
+    setStatus("Lỗi: " + e.message);
   }
 }
 
-sendBtn.addEventListener('click', onSend);
-input.addEventListener('keydown', e=>{ if(e.key === 'Enter') onSend(); });
-
-clearBtn.addEventListener('click', ()=>{
-  convo = []; chatbox.innerHTML = '<div class="small">Cuộc trò chuyện đã được xoá.</div>'; setStatus('');
-});
-
-/* small util */
-function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
+sendBtn.addEventListener("click", sendMsg);
+input.addEventListener("keydown", e=>{ if(e.key==="Enter") sendMsg(); });
 </script>
 </body>
 </html>
